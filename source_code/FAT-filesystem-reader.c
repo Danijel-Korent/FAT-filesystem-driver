@@ -2,13 +2,23 @@
 #include<stdio.h>   //printf, gets_s
 #include<string.h>  //strcmp
 
+#include "../fat_images/FAT12_3-clusters-clean.h"
 
 
 static void print_root_files(void)
 {
     // TODO: put all necessary logic here, and then split it into functional parts
 
+    // Info:
     // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
+
+    // COPY-PASTER:
+    //      - smallest possible FAT12 file system (!! Needs modification in mkfs.fat source to work! )
+    //          - 3k total size, with 3 clusters * 512bytes = 1536bytes free space
+    //          - works in linux (r/w), can read on windows10, but sometimes crashes explorer.exe on write
+    //
+    //          /home/danijel/fat_proj/dosfstools/src/mkfs.fat -vvv -F 12 -f 1 -r 16 -R 1 -n POKUS -s 1 -C FAT12_3-clusters-clean 3 > FAT12_3-clusters-clean_info.txt
+    //
 
     /*************************************************************************************
     * OVERALL STRUCTURE OF FAT FS
@@ -29,10 +39,10 @@ static void print_root_files(void)
     /*************************************************************************************
     * OVERALL STRUCTURE OF Volume Boot Record (VBR) - the first 512 bytes of a FS (not MBR)
     *
-    *     0 -   2  Boot code jump instruction
+    *     0 -   2  Boot code jump instruction / EB 3C 90 -> jmp 0x3e, nop
     *     3 -   8  OEM Name string
     *     9 -  37  BIOS Parametar block ??
-    *    90 - 510  Boot code (bootloader) ??
+    *    62 - 510  Boot code (bootloader) -> conflicting info sources, but the jump instraction for the FAT12 points to 0x3e
 
     *   511-512 - Boot sector signature
     */

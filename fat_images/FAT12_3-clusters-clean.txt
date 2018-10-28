@@ -1,0 +1,20 @@
+mkfs.fat 4.1+git (2017-01-24)
+Boot jump code is eb 3c
+Using 1 reserved sectors
+Disabling alignment due to tiny filesystem
+Trying with 1 sectors/cluster:
+FAT12: #clu=3, fatlen=1, maxclu=341, limit=4080
+FAT16: #clu=3, fatlen=1, maxclu=256, limit=65520
+FAT16: would be misdetected as FAT12
+FAT32: not enough clusters (65529)
+FAT32: #clu=0, fatlen=1, maxclu=128, limit=268435440
+FAT12_3-clusters-clean has 64 heads and 32 sectors per track,
+hidden sectors 0x0000;
+logical sector size is 512,
+using 0xf8 media descriptor, with 6 sectors;
+drive number 0x80;
+filesystem has 1 12-bit FAT and 1 sector per cluster.
+FAT size is 1 sector, and provides 3 clusters.
+There is 1 reserved sector.
+Root directory contains 16 slots and uses 1 sectors.
+Volume ID is 3e5b36cb, volume label POKUS.
