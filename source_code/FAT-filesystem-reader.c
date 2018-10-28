@@ -11,12 +11,6 @@ static inline uint16_t read_16(const unsigned char *buffer, int offset);
 static inline uint32_t read_32(const unsigned char *buffer, int offset);
 static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
 
-
-
-static void print_root_files(void)
-{
-    // TODO: put all necessary logic here, and then split it into functional parts
-
     // Info:
     // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
     // https://social.technet.microsoft.com/wiki/contents/articles/6771.the-fat-file-system.aspx
@@ -62,6 +56,12 @@ static void print_root_files(void)
     *
     *   511 - 512 - Boot sector signature
     */
+
+
+static void print_root_files(void)
+{
+    // TODO: put all necessary logic here, and then split it into functional parts
+
 
     // Offsets of the Volume Boot Record (VBR)
     // - BIOS Parametar block - Common data for FAT 12/16/32 (up to 0x23)
