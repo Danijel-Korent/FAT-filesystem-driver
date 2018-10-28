@@ -110,11 +110,11 @@ static void print_root_files(void)
     //  8b Extended boot signature, always 0x29
     // 32b Volume ID
     // 88b Volume label string (11 bytes)
-    // 80b File system type (10 bytes)
+    // 80b File system type (8 bytes)
     const uint_fast8_t FAT16_BOOT_SIGN_8b     = 0x26; // Extended boot signature, always 0x29
     const uint_fast8_t FAT16_VOLUME_ID_32b    = 0x27;
     const uint_fast8_t FAT16_VOLUME_LABEL_88b = 0x2B;
-    const uint_fast8_t FAT16_FS_TYPE_80b      = 0x36;
+    const uint_fast8_t FAT16_FS_TYPE_64b      = 0x36;
 
     // Offsets of the Volume Boot Record (VBR)
     // - Extended BIOS Parametar block - FAT 32 ONLY !!!
@@ -130,7 +130,7 @@ static void print_root_files(void)
     //  8b Extended boot signature
     // 32b Volume ID
     // 88b Volume label string (11 bytes)
-    // 80b File system type (10 bytes)
+    // 80b File system type (8 bytes)
 
 
     // Print the extened BIOS Parametar block settings - for FAT12 variant
@@ -138,12 +138,54 @@ static void print_root_files(void)
     strncpy(label, (const char*)(FS_image + FAT16_VOLUME_LABEL_88b), sizeof(label)-1);
 
     char fs_type[8 + 1] = {0};
-    strncpy(fs_type, (const char*)(FS_image+ FAT16_FS_TYPE_80b), sizeof(fs_type)-1);
+    strncpy(fs_type, (const char*)(FS_image+ FAT16_FS_TYPE_64b), sizeof(fs_type)-1);
 
     printf("\n FAT16_VOLUME_LABEL:   %s",label);
     printf("\n FAT16_FS_TYPE:        %s",fs_type);
 
     printf("\n Boot block signature: %#x %#x", FS_image[510], FS_image[511]);
+
+
+    // Fetch the root directory area (FAT12/16 only)
+
+    // Print the entries/files from root directory
+    //      - (temp) hardcode manualy the offset of the root dir
+    //      - Add the offsets for the "directory entry"
+    //      - Iterate over all slots
+    //      - Check if it is active - If active, print parameters
+    //      - calculate the offset of the root dir
+
+
+    const uint_fast8_t file_name_64b        = 0x00;
+    const uint_fast8_t file_extension_24b   = 0x08;
+    const uint_fast8_t file_attributes_8b   = 0x0b;
+    const uint_fast8_t file_1st_cluster_16b = 0x1a;
+    const uint_fast8_t file_size_32b        = 0x1c;
+
+    // TODO: hardcoded at the moment - calculate it from the VBR data
+    const uint8_t* const root_dir_base =  FS_image + 1024;
+    const uint_fast8_t directory_slots_num = 16;
+
+    // Iterate the root directory entries and print the parameters
+    for( int i = 0; i < directory_slots_num; i++ )
+    {
+        const uint8_t* const directory_entry_base = root_dir_base + i*32; // 32 is the size of the directory entry structure
+
+        // First byte in file name have special meaning. If zero - slot is unused
+        if( 0 == *directory_entry_base )
+        {
+            break; // Rest of the slots are also empty according to the specs
+        }
+
+        char file_name[8+3 + 1]  = {0};
+        strncpy(file_name, (const char*)(directory_entry_base), sizeof(file_name)-1); // Get both the name and extension
+
+        printf("\n\n ENTRY NO.%i", i);
+        printf("\n   File name:   %s", file_name);
+        printf("\n   File attributes:   %#x", read__8(directory_entry_base, file_attributes_8b));
+        printf("\n   First cluster:     %#x", read_16(directory_entry_base, file_1st_cluster_16b));
+        printf("\n   File size:         %i",  read_32(directory_entry_base, file_size_32b));
+    }
 
 
     // Example output of the function
