@@ -1,7 +1,7 @@
 
-#include<stdint.h>
-#include<stdio.h>   //printf, gets_s
-#include<string.h>  //strcmp
+#include <stdint.h>
+#include <stdio.h>   //printf, fgets
+#include <string.h>  //strcmp
 
 
 #include "../fat_images/FAT12_3-clusters-clean.h" // Here is located an array of file system binary image
@@ -208,8 +208,16 @@ static void run_pseudo_shell(void)
 
     printf("\n\n\nshell:%s$ ", pwd);
 
-    while (NULL != gets_s(user_input, sizeof(user_input)))
+    while (NULL != fgets(user_input, sizeof(user_input), stdin))
     {
+        // A workaround because fgets include a newline in a string
+        int length = strlen(user_input);
+        if( length > 0 )
+        {
+            if( '\n' == user_input[length-1] ) user_input[length-1] = 0;
+        }
+
+        // Process input
         if (0 == strcmp(user_input, "exit"))
         {
             break;
