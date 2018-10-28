@@ -64,7 +64,7 @@ static void print_root_files(void)
     */
 
     // Offsets of the Volume Boot Record (VBR)
-    // - Common data for FAT 12/16/32 (up to 0x23)
+    // - BIOS Parametar block - Common data for FAT 12/16/32 (up to 0x23)
     const uint_fast8_t dummy                    = 0x00;
     const uint_fast8_t JUMP_INSTRUCTION_1       = 0x00;
     const uint_fast8_t JUMP_INSTRUCTION_2       = 0x01;
@@ -102,7 +102,51 @@ static void print_root_files(void)
     printf("\n NUM_RESERVED_SECTORS: %i",  read_16(FS_image, NUM_RESERVED_SECTORS_16b));
     printf("\n NUM_OF_FATS:          %i",  read__8(FS_image, NUM_OF_FATS));
 
-    // Example output
+
+    // Offsets of the Volume Boot Record (VBR)
+    // - Extended BIOS Parametar block - FAT 12/16 ONLY !!!
+    //  8b Number of drives
+    //  8b Reserved
+    //  8b Extended boot signature, always 0x29
+    // 32b Volume ID
+    // 88b Volume label string (11 bytes)
+    // 80b File system type (10 bytes)
+    const uint_fast8_t FAT16_BOOT_SIGN_8b     = 0x26; // Extended boot signature, always 0x29
+    const uint_fast8_t FAT16_VOLUME_ID_32b    = 0x27;
+    const uint_fast8_t FAT16_VOLUME_LABEL_88b = 0x2B;
+    const uint_fast8_t FAT16_FS_TYPE_80b      = 0x36;
+
+    // Offsets of the Volume Boot Record (VBR)
+    // - Extended BIOS Parametar block - FAT 32 ONLY !!!
+    const uint_fast8_t FAT32_SECTORS_PER_FAT_32b      = 0x24; // also named "FAT Size"
+    const uint_fast8_t FAT32_EXTERNAL_FLAGS_16b       = 0x28; // ??? check if this is correct
+    const uint_fast8_t FAT32_FILE_SYSTE_VERSION_16b   = 0x2A; // ??? check if this is correct
+    const uint_fast8_t FAT32_ROOT_DIR_1ST_CLUSTER_32b = 0x2c;
+    // 16b File system info
+    // 16b Boot record backup
+    // 96b of reserved space
+    //  8b Number of drives
+    //  8b Reserved
+    //  8b Extended boot signature
+    // 32b Volume ID
+    // 88b Volume label string (11 bytes)
+    // 80b File system type (10 bytes)
+
+
+    // Print the extened BIOS Parametar block settings - for FAT12 variant
+    char label[11 + 1]  = {0};
+    strncpy(label, (const char*)(FS_image + FAT16_VOLUME_LABEL_88b), sizeof(label)-1);
+
+    char fs_type[8 + 1] = {0};
+    strncpy(fs_type, (const char*)(FS_image+ FAT16_FS_TYPE_80b), sizeof(fs_type)-1);
+
+    printf("\n FAT16_VOLUME_LABEL:   %s",label);
+    printf("\n FAT16_FS_TYPE:        %s",fs_type);
+
+    printf("\n Boot block signature: %#x %#x", FS_image[510], FS_image[511]);
+
+
+    // Example output of the function
     printf("\n\n\n Funtion \"print_root_files\" example output: \n\n");
 
     printf(" TYPE SIZE NAME  \n");
@@ -122,9 +166,10 @@ static void run_pseudo_shell(void)
 {
     // TODO: Implement a simple shell-like interface that supports cd, ls and cat commands
 
-    char user_input[100] = { 0 };
+    char user_input[100] = {0};
+    char pwd[100]        = "/";
 
-    printf("\n\n\nshell$ ");
+    printf("\n\n\nshell:%s$ ", pwd);
 
     while (NULL != gets_s(user_input, sizeof(user_input)))
     {
@@ -153,7 +198,7 @@ static void run_pseudo_shell(void)
             printf("%s: Unknown command", user_input);
         }
 
-        printf("\nshell$ ");
+        printf("\nshell:%s$ ", pwd);
     }
 }
 
