@@ -60,7 +60,7 @@ static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This
 
 static void print_root_files(void)
 {
-    // TODO: put all necessary logic here, and then split it into functional parts
+    // TODO: put all necessary logic here, and then split it into functional parts later
 
 
     // Offsets of the Volume Boot Record (VBR)
@@ -103,6 +103,7 @@ static void print_root_files(void)
     printf("\n NUM_OF_FATS:          %i",  read__8(FS_image, NUM_OF_FATS));
 
 
+    // TODO: CLEAN UP THIS MESS
     // Offsets of the Volume Boot Record (VBR)
     // - Extended BIOS Parametar block - FAT 12/16 ONLY !!!
     //  8b Number of drives
@@ -146,16 +147,7 @@ static void print_root_files(void)
     printf("\n Boot block signature: %#x %#x", FS_image[510], FS_image[511]);
 
 
-    // Fetch the root directory area (FAT12/16 only)
-
-    // Print the entries/files from root directory
-    //      - (temp) hardcode manualy the offset of the root dir
-    //      - Add the offsets for the "directory entry"
-    //      - Iterate over all slots
-    //      - Check if it is active - If active, print parameters
-    //      - calculate the offset of the root dir
-
-
+    // Offsets for directory entry structure
     const uint_fast8_t file_name_64b        = 0x00;
     const uint_fast8_t file_extension_24b   = 0x08;
     const uint_fast8_t file_attributes_8b   = 0x0b;
@@ -187,6 +179,9 @@ static void print_root_files(void)
         printf("\n   File size:         %i",  read_32(directory_entry_base, file_size_32b));
     }
 
+    // TODO NEXT:
+    //      - Print the content of the directories
+    //      - Print the content of the files
 
     // Example output of the function
     printf("\n\n\n Funtion \"print_root_files\" example output: \n\n");
