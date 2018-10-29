@@ -98,8 +98,8 @@ e_dirEntryType;
 // File system is read-only and there will bi no internal states or allocated buffers, s
 // so no point in open and close functions...
 
-int8_t find_directory            ( const directory_handle_t *handle, const uint8_t* const path);
-int8_t read_next_directory_entry ( const directory_handle_t *handle, directory_entry_t* const dir_entry );
+int8_t find_directory            ( directory_handle_t* const handle, const uint8_t* const path);
+int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_entry_t* const dir_entry );
 
 int8_t find_file( file_handle_t* const handle, const uint8_t* const path );
 int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint32_t buffer_size, uint32_t* const successfully_read);
