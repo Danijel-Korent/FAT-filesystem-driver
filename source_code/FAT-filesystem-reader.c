@@ -57,6 +57,7 @@ static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This
     *   511 - 512 - Boot sector signature
     */
 
+// TODO NEXT: Add interface for accesing directory items and reading files
 
 static void print_root_files(void)
 {
@@ -159,6 +160,8 @@ static void print_root_files(void)
     const uint_fast8_t directory_slots_num = 16;
 
     // Iterate the root directory entries and print the parameters
+    printf("\n\n --> Content of the root directory");
+
     for( int i = 0; i < directory_slots_num; i++ )
     {
         const uint8_t* const directory_entry_base = root_dir_base + i*32; // 32 is the size of the directory entry structure
@@ -182,6 +185,55 @@ static void print_root_files(void)
     // TODO NEXT:
     //      - Print the content of the directories
     //      - Print the content of the files
+
+    // Experimental reading of directory content
+    // TEMP HARDCODED: Print a content of a directory DIR_1 of current image
+    // TODO: currently hardcoded, modify to calculate and iterate all directories
+    // Iterate the directory entries and print the parameters
+    {
+        printf("\n\n --> Content of the DIR_1 directory");
+
+        const uint8_t* const clusters_start_addr = root_dir_base + 512; // In this image clusters start in 1 sector after "root directory" area
+
+        for( int i = 0; i < directory_slots_num; i++ )
+        {
+            const uint8_t* const directory_entry_base = clusters_start_addr
+                                                        + 512   // Dir_1 is located in 2nd cluster
+                                                        + i*32; // 32 is the size of the directory entry structure
+
+            // First byte in file name have special meaning. If zero - slot is unused
+            if( 0 == *directory_entry_base )
+            {
+                break; // Rest of the slots are also empty according to the specs
+            }
+
+            char file_name[8+3 + 1]  = {0};
+            strncpy(file_name, (const char*)(directory_entry_base), sizeof(file_name)-1); // Get both the name and extension
+
+            printf("\n\n ENTRY NO.%i", i);
+            printf("\n   File name:   %s", file_name);
+            printf("\n   File attributes:   %#x", read__8(directory_entry_base, file_attributes_8b));
+            printf("\n   First cluster:     %#x", read_16(directory_entry_base, file_1st_cluster_16b));
+            printf("\n   File size:         %i",  read_32(directory_entry_base, file_size_32b));
+        }
+    }
+
+    // Experimental reading of file content
+    // TEMP HARDCODED: Print a content of a file FILE_1 of current image
+    {
+        const uint8_t* const clusters_start_addr = root_dir_base + 512; // In this image clusters start in 1 sector after "root directory" area
+
+        const uint8_t* const file_start = clusters_start_addr + 2 * 512; // cluster_start + cluster no. * cluster size
+
+        const int file_size = 18; // HARDCODED to FILE_1
+
+        uint8_t string_buffer[512] = {0};
+
+        memcpy(string_buffer, file_start, file_size);
+
+        puts("\n\n --> Content of the file FILE_1");
+        puts(string_buffer);
+    }
 
     // Example output of the function
     printf("\n\n\n Funtion \"print_root_files\" example output: \n\n");
