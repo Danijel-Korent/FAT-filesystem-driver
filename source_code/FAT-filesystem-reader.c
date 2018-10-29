@@ -59,6 +59,52 @@ static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This
 
 // TODO NEXT: Add interface for accesing directory items and reading files
 
+// Okay, so we now know how to find data and how the data is encoded, time to implement interfaces
+typedef struct directory_handle_tag
+{
+    uint32_t first_cluster_no;
+    uint32_t seek;
+} directory_handle_t;
+
+typedef struct directory_entry_tag
+{
+    uint8_t name[16];
+    uint8_t type;
+    uint32_t size;
+} directory_entry_t;
+
+typedef struct file_handle_tag
+{
+    uint32_t first_cluster_no;
+    uint32_t size;
+    uint32_t seek;
+} file_handle_t;
+
+enum
+{
+    e_SUCCESS,
+    e_FILE_NOT_FOUND,
+    e_END_OF_DIR
+}
+e_fatErrorCodes;
+
+enum
+{
+    e_FILE,
+    e_DIRECTORY
+}
+e_dirEntryType;
+
+// File system is read-only and there will bi no internal states or allocated buffers, s
+// so no point in open and close functions...
+
+int8_t find_directory            ( const directory_handle_t *handle, const uint8_t* const path);
+int8_t read_next_directory_entry ( const directory_handle_t *handle, directory_entry_t* const dir_entry );
+
+int8_t find_file( file_handle_t* const handle, const uint8_t* const path );
+int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint32_t buffer_size, uint32_t* const successfully_read);
+
+
 static void print_root_files(void)
 {
     // TODO: put all necessary logic here, and then split it into functional parts later
@@ -237,18 +283,52 @@ static void print_root_files(void)
 
     // Example output of the function
     printf("\n\n\n Funtion \"print_root_files\" example output: \n\n");
-
-    printf(" TYPE SIZE NAME  \n");
-    printf("  dir    0  Dir1  \n");
-    printf("  dir    0  Dir2  \n");
-    printf(" file   22  File1 \n");
 }
+
+
+int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const path)
+{
+    // TODO: implement, basically just find the first cluster
+#if 1
+    handle->first_cluster_no = 0;
+    handle->seek = 0;
+#endif
+
+    return e_SUCCESS;
+}
+
+int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_entry_t* const dir_entry )
+{
+#if 1
+    // Dummy implementation for testing
+    directory_entry_t dummy_entries[] =
+    {
+        {".",            e_DIRECTORY,   0},
+        {"..",           e_DIRECTORY,   0},
+        {"Dummy_Dir_1",  e_DIRECTORY,   0},
+        {"Dummy_Dir_2",  e_DIRECTORY,   0},
+        {"Dummy_File_1", e_FILE,       10},
+    };
+
+    if( handle->seek < sizeof(dummy_entries)/sizeof(dummy_entries[0]) )
+    {
+        *dir_entry = dummy_entries[handle->seek++];
+
+        return e_SUCCESS;
+    }
+#else
+    // TODO: implement -> fetch the entry data using cluster number and seek
+
+#endif
+    return e_END_OF_DIR;
+}
+
 
 /***********************************************************************************************************************
  *                                            PSEUDO SHELL SECTION                                                     *
  ***********************************************************************************************************************/
-static void execute_command_cd(const char *args, int args_lenght);
-static void execute_command_ls(const char *args, int args_lenght);
+static void execute_command_cd(char* const args, const int args_lenght);
+static void execute_command_ls(char* const args, const int args_lenght);
 
 
 static void run_pseudo_shell(void)
@@ -299,18 +379,48 @@ static void run_pseudo_shell(void)
     }
 }
 
-static void execute_command_cd(const char *args, int args_lenght)
+static void execute_command_cd(char* const args, const int args_lenght)
 {
     printf("cd unimplemented");
 }
 
-static void execute_command_ls(const char *args, int args_lenght)
+static void execute_command_ls(char* const args, const int args_lenght)
 {
+#if 1
+    if( 0 != args_lenght)
+    {
+        args[args_lenght-1] = 0; // NUll-terminate, just in case
+    }
+    else
+    {
+        // TODO: replace args with PWD
+    }
+
+    directory_handle_t dir_handle;
+    directory_entry_t  dir_entry;
+
+    find_directory(&dir_handle, args);
+
+    printf("\n TYPE   SIZE  NAME  \n");
+
+    while( e_END_OF_DIR != read_next_directory_entry( &dir_handle, &dir_entry ) )
+    {
+        uint8_t *type = "file";
+
+        if( e_FILE == dir_entry.type )
+        {
+            type = " dir";
+        }
+
+        printf(" %s %6i  %s \n", type, dir_entry.size , dir_entry.name);
+    }
+#else
     printf(" ls example output: \n\n");
 
     printf(" %s %06i  %s \n", "d", 0, "DIR_5");
     printf(" %s %06i  %s \n", "f", 5, "FILE_6");
     printf(" %s %06i  %s \n", "f", 255, "FILE_7");
+#endif
 }
 
 int main(void)
