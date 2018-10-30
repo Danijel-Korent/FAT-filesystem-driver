@@ -342,10 +342,10 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
         const uint8_t *start_name = path +1 ;
         const uint8_t *seek = path +1;
 
-        for(; '/' != *seek; seek++ ); // Find the next '/' char
+        for(; ('/' != *seek && 0 == *seek  ); seek++ ); // Find the next '/' char
 
-        // TODO: this really needs clean up
-        // TODO: this just check first name in path, need to check all
+        // TODO: this really needs cleaning up
+        // TODO: this just checks root level folders, make a loop to seek all levels until the null-terminator
         {
             // Offsets for directory entry structure
             const uint_fast8_t file_name_64b        = 0x00;
