@@ -370,7 +370,19 @@ static void run_pseudo_shell(void)
         }
         else if ('c' == user_input[0] && 'd' == user_input[1]) // cd
         {
-            execute_command_cd(NULL, 0);
+            uint8_t *args      = NULL;
+            uint32_t args_len  = 0;
+
+            size_t current_input_len = strlen(user_input) + 1; // + null-terminator
+
+            // TODO: duplicated code
+            if( current_input_len > (3 + 1) )
+            {
+                args     = user_input + 3;
+                args_len = current_input_len - 3;
+            }
+
+            execute_command_cd(args, args_len);
         }
         else if ('l' == user_input[0] && 's' == user_input[1]) // ls
         {
@@ -387,7 +399,46 @@ static void run_pseudo_shell(void)
 
 static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
 {
+#if 1
+    // TODO: validate/sanitize input args, currently PWD is just updated without any checks
+
+    if( NULL == args || 0 == args_lenght)
+    {
+        return; // Nothing to do here, maybe print no args..
+    }
+
+    // NUll-terminate, just in case
+    args[args_lenght-1] = 0;
+
+    // Update the pwd
+    if( '/' == args[0] )
+    {
+        strncpy( shell_pwd, args, sizeof(shell_pwd) - 1);
+    }
+    else
+    {
+        // Append argument to current pwd
+        size_t current_pwd_len   = strlen(shell_pwd); // Without null-term, but args_lenght already inludes null-terminator size
+        size_t max_available_len = sizeof(shell_pwd); // With null termn
+
+        if( ( current_pwd_len + args_lenght) < max_available_len )
+        {
+            strcat(shell_pwd, args);
+        }
+
+        current_pwd_len = strlen(shell_pwd);
+    }
+
+    // Append '/' at the end if it is not there
+    size_t last_char_index = strlen(shell_pwd) - 1;
+
+    if( '/' != shell_pwd[last_char_index])
+    {
+        strcat(shell_pwd, "/"); // TODO: check if there is enought space for this
+    }
+#else
     printf("cd unimplemented");
+#endif
 }
 
 static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
