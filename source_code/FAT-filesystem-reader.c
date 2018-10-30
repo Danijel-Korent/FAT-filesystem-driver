@@ -289,31 +289,72 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
 {
     // TODO: implement, basically just find the first cluster
 #if 1
-    handle->first_cluster_no = 0;
+    handle->first_cluster_no = 0; // Zero is invalid value
     handle->seek = 0;
+
+    // Dummy stub for testing
+
+    static uint8_t dummy_directory_names[][100] =
+    {
+        {"/"},
+        {"/home/"},
+        {"/home/user/"}
+    };
+
+    for( int i = 0; i < sizeof(dummy_directory_names)/sizeof(dummy_directory_names[0]); i++)
+    {
+        if( 0 == strcmp(path, dummy_directory_names[i]) )
+        {
+            handle->first_cluster_no = i + 1;
+            return e_SUCCESS;
+        }
+    }
 #endif
 
-    return e_SUCCESS;
+    return e_FILE_NOT_FOUND;
 }
 
 int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_entry_t* const dir_entry )
 {
 #if 1
-    // Dummy implementation for testing
-    directory_entry_t dummy_entries[] =
+    // Dummy stub for testing
+
+    static directory_entry_t dummy_entries[][3] =
     {
-        {".",            e_DIRECTORY,   0},
-        {"..",           e_DIRECTORY,   0},
-        {"Dummy_Dir_1",  e_DIRECTORY,   0},
-        {"Dummy_Dir_2",  e_DIRECTORY,   0},
-        {"Dummy_File_1", e_FILE,       10},
+        {
+            // root
+            {"home",   e_DIRECTORY,        0},
+            {"root_file01", e_FILE,        0},
+            {"root_file02", e_FILE,       10}
+        },
+        {
+            // home
+            //{".",     e_DIRECTORY,   0},
+            //{"..",    e_DIRECTORY,   0},
+            {"user",   e_DIRECTORY,        0},
+            {"home_file11", e_FILE,        0},
+            {"home_file12", e_FILE,       11}
+        },
+        {
+            //user
+            {"user_file21", e_FILE,        0},
+            {"user_file22", e_FILE,        0},
+            {"user_file23", e_FILE,       12}
+        }
     };
 
-    if( handle->seek < sizeof(dummy_entries)/sizeof(dummy_entries[0]) )
+    if( handle->seek < sizeof(dummy_entries[0])/sizeof(dummy_entries[0][0]) )
     {
-        *dir_entry = dummy_entries[handle->seek++];
+        size_t index = handle->first_cluster_no - 1;
 
-        return e_SUCCESS;
+        size_t table_size = sizeof(dummy_entries) / sizeof(dummy_entries[0]);
+
+        if( index < table_size )
+        {
+            *dir_entry = dummy_entries[index][handle->seek++];
+
+            return e_SUCCESS;
+        }
     }
 #else
     // TODO: implement -> fetch the entry data using cluster number and seek
@@ -393,7 +434,7 @@ static void run_pseudo_shell(void)
             printf("%s: Unknown command\n", user_input);
         }
 
-        printf("\n\nshell:%s $ ", shell_pwd);
+        printf("\nshell:%s $ ", shell_pwd);
     }
 }
 
@@ -407,17 +448,22 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
         return; // Nothing to do here, maybe print no args..
     }
 
+    // Save the old pwd
+    uint8_t old_pwd[MAX_PATH_SIZE]  = "";
+    strncpy(old_pwd, shell_pwd, MAX_PATH_SIZE);
+
     // NUll-terminate, just in case
     args[args_lenght-1] = 0;
 
-    // Update the pwd
+    // Update the shell pwd to new path
     if( '/' == args[0] )
     {
+        // If full path just copy the argument
         strncpy( shell_pwd, args, sizeof(shell_pwd) - 1);
     }
     else
     {
-        // Append argument to current pwd
+        // If relative path - append argument to current pwd
         size_t current_pwd_len   = strlen(shell_pwd); // Without null-term, but args_lenght already inludes null-terminator size
         size_t max_available_len = sizeof(shell_pwd); // With null termn
 
@@ -435,6 +481,14 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
     if( '/' != shell_pwd[last_char_index])
     {
         strcat(shell_pwd, "/"); // TODO: check if there is enought space for this
+    }
+
+    // If directory in updated shell pwd cannot be found, restore old pwd
+    directory_handle_t handle;
+    if( e_SUCCESS != find_directory(&handle, shell_pwd) )
+    {
+        printf("cd: directory \"%s\" not found!", shell_pwd);
+        strncpy(shell_pwd, old_pwd, MAX_PATH_SIZE);
     }
 #else
     printf("cd unimplemented");
