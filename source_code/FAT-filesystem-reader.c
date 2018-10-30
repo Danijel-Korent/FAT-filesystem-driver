@@ -427,7 +427,19 @@ static void run_pseudo_shell(void)
         }
         else if ('l' == user_input[0] && 's' == user_input[1]) // ls
         {
-            execute_command_ls(NULL, 0);
+            uint8_t *args      = NULL;
+            uint32_t args_len  = 0;
+
+            // TODO: duplicated code
+            size_t current_input_len = strlen(user_input) + 1; // + null-terminator
+
+            if( current_input_len > (3 + 1) )
+            {
+                args     = user_input + 3;
+                args_len = current_input_len - 3;
+            }
+
+            execute_command_ls(args, args_len);
         }
         else
         {
@@ -498,33 +510,52 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
 static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
 {
 #if 1
-    if( 0 != args_lenght)
+
+    // Just ignore arguments for now
+#if 0
+    uint8_t path[MAX_PATH_SIZE] = {0};
+
+    if( NULL == args || 0 == args_lenght)
     {
-        args[args_lenght-1] = 0; // NUll-terminate, just in case
+        // TODO: check the ranges
+        strncpy( path, shell_pwd, sizeof(shell_pwd) );
     }
     else
     {
-        // TODO: replace args with PWD
+        args[args_lenght-1] = 0; // NUll-terminate, just in case
+
+        // TODO: check the ranges
+        strncpy( path, args, args_lenght);
     }
+#endif
 
     directory_handle_t dir_handle;
     directory_entry_t  dir_entry;
 
-    find_directory(&dir_handle, args);
+    //printf("\n ARGS: %s \n", args); // TEMP
 
-    printf("\n TYPE   SIZE  NAME  \n");
-
-    while( e_END_OF_DIR != read_next_directory_entry( &dir_handle, &dir_entry ) )
+    if( e_SUCCESS == find_directory(&dir_handle, shell_pwd) )
     {
-        uint8_t *type = "file";
+        printf("\n TYPE   SIZE  NAME  \n");
 
-        if( e_FILE == dir_entry.type )
+        while( e_END_OF_DIR != read_next_directory_entry( &dir_handle, &dir_entry ) )
         {
-            type = " dir";
-        }
+            uint8_t *type = "file";
 
-        printf(" %s %6i  %s \n", type, dir_entry.size , dir_entry.name);
+            if( e_FILE == dir_entry.type )
+            {
+                type = " dir";
+            }
+
+            printf(" %s %6i  %s \n", type, dir_entry.size , dir_entry.name);
+        }
     }
+    else
+    {
+        printf("\n Directory not fund %s \n", shell_pwd);
+    }
+
+
 #else
     printf(" ls example output: \n\n");
 
