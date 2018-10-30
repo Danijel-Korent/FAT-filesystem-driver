@@ -335,10 +335,6 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
     {
         handle->first_cluster_no = 0;
     }
-    else if ( 0 == strcmp(path, "/DIR_2/"))
-    {
-        handle->first_cluster_no = 3;
-    }
     else
     {
         handle->first_cluster_no = 0;
