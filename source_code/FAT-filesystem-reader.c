@@ -130,7 +130,7 @@ const uint8_t* find_cluster_address( int cluster_no )
 }
 
 
-static void print_root_files(void)
+static void print_image_info(void)
 {
     // TODO: put all necessary logic here, and then split it into functional parts later
 
@@ -712,7 +712,7 @@ static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
 
 int main(void)
 {
-    print_root_files();
+    print_image_info();
 
     run_pseudo_shell();
 
