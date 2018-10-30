@@ -66,9 +66,11 @@ typedef struct directory_handle_tag
     uint32_t seek;
 } directory_handle_t;
 
+#define MAX_NAME_SIZE (11)
+
 typedef struct directory_entry_tag
 {
-    uint8_t name[16];
+    uint8_t name[MAX_NAME_SIZE + 1];
     uint8_t type;
     uint32_t size;
 } directory_entry_t;
@@ -273,16 +275,13 @@ static void print_root_files(void)
 
         const int file_size = 18; // HARDCODED to FILE_1
 
-        uint8_t string_buffer[512] = {0};
+        uint8_t string_buffer[512] = {0}; // One cluster is one sector in our case - 512 bytes, could be bigger so this need to be calculated
 
         memcpy(string_buffer, file_start, file_size);
 
         puts("\n\n --> Content of the file FILE_1");
         puts(string_buffer);
     }
-
-    // Example output of the function
-    printf("\n\n\n Funtion \"print_root_files\" example output: \n\n");
 }
 
 
@@ -327,21 +326,28 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 /***********************************************************************************************************************
  *                                            PSEUDO SHELL SECTION                                                     *
  ***********************************************************************************************************************/
-static void execute_command_cd(char* const args, const int args_lenght);
-static void execute_command_ls(char* const args, const int args_lenght);
+static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght);
+static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght);
+
+#define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
+#define MAX_INPUT_LEN (100 + 1)
+
+uint8_t shell_pwd[MAX_PATH_SIZE]  = "/";
 
 
 static void run_pseudo_shell(void)
 {
     // TODO: Implement a simple shell-like interface that supports cd, ls and cat commands
 
-    char user_input[100] = {0};
-    char pwd[100]        = "/";
+    uint8_t user_input[MAX_INPUT_LEN] = {0};
 
-    printf("\n\n\nshell:%s$ ", pwd);
+    printf("\n\n\nshell:%s $ ", shell_pwd);
 
     while (NULL != fgets(user_input, sizeof(user_input), stdin))
     {
+         // NUll-terminate input, just in case
+        user_input[sizeof(user_input)-1] = 0;
+
         // A workaround because fgets include a newline in a string
         int length = strlen(user_input);
         if( length > 0 )
@@ -372,19 +378,19 @@ static void run_pseudo_shell(void)
         }
         else
         {
-            printf("%s: Unknown command", user_input);
+            printf("%s: Unknown command\n", user_input);
         }
 
-        printf("\nshell:%s$ ", pwd);
+        printf("\n\nshell:%s $ ", shell_pwd);
     }
 }
 
-static void execute_command_cd(char* const args, const int args_lenght)
+static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
 {
     printf("cd unimplemented");
 }
 
-static void execute_command_ls(char* const args, const int args_lenght)
+static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
 {
 #if 1
     if( 0 != args_lenght)
