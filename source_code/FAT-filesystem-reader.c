@@ -93,7 +93,7 @@ e_fatErrorCodes;
 enum
 {
     e_FILE,
-    e_DIRECTORY
+    e_DIRECTORY,
 }
 e_dirEntryType;
 
@@ -105,6 +105,29 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
 int8_t find_file( file_handle_t* const handle, const uint8_t* const path );
 int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint32_t buffer_size, uint32_t* const successfully_read);
+
+// TODO: TEMP
+const unsigned char* const FS_image = FAT12_3_clusters_clean;
+
+const uint8_t* find_root_table_address( void )
+{
+    // TODO: implement this
+    return FS_image + 1024;
+}
+
+const uint8_t* find_cluster_address( int cluster_no )
+{
+    // TODO: implement this
+
+    uint32_t cluster_size = 512; // TODO: hardcoded
+    uint32_t rootdir_size = 512;
+
+    const uint8_t *cluster_base_address = find_root_table_address() + rootdir_size; // In this image clusters start in 1 sector after "root directory" area
+
+    uint32_t cluster_offset =  (cluster_no - 2) * 512; // Cluster numeration starts from number 2 for some reason
+
+    return cluster_base_address + cluster_offset;
+}
 
 
 static void print_root_files(void)
@@ -134,9 +157,6 @@ static void print_root_files(void)
     const uint_fast8_t NUM_OF_HEADS_16b          = 0x1a;
     const uint_fast8_t HIDDEN_SECTORS_32b        = 0x1c;
     const uint_fast8_t NUM_OF_TOTAL_SECTORS_32b  = 0x20; // If NUM_OF_TOTAL_SECTORS_16b is zero, this one is used
-
-
-    const unsigned char* const FS_image = FAT12_3_clusters_clean;
 
 
     // Print the BIOS Parametar block settings
@@ -204,7 +224,7 @@ static void print_root_files(void)
     const uint_fast8_t file_size_32b        = 0x1c;
 
     // TODO: hardcoded at the moment - calculate it from the VBR data
-    const uint8_t* const root_dir_base =  FS_image + 1024;
+    const uint8_t* const root_dir_base =  find_root_table_address();
     const uint_fast8_t directory_slots_num = 16;
 
     // Iterate the root directory entries and print the parameters
@@ -245,8 +265,7 @@ static void print_root_files(void)
 
         for( int i = 0; i < directory_slots_num; i++ )
         {
-            const uint8_t* const directory_entry_base = clusters_start_addr
-                                                        + 512   // Dir_1 is located in 2nd cluster
+            const uint8_t* const directory_entry_base = find_cluster_address(3) // Dir_1 is located in 2nd cluster (cluster no.3)
                                                         + i*32; // 32 is the size of the directory entry structure
 
             // First byte in file name have special meaning. If zero - slot is unused
@@ -269,28 +288,28 @@ static void print_root_files(void)
     // Experimental reading of file content
     // TEMP HARDCODED: Print a content of a file FILE_1 of current image
     {
-        const uint8_t* const clusters_start_addr = root_dir_base + 512; // In this image clusters start in 1 sector after "root directory" area
+        const uint8_t* const file_start = find_cluster_address(2); // cluster_start + cluster no. * cluster size
 
-        const uint8_t* const file_start = clusters_start_addr + 2 * 512; // cluster_start + cluster no. * cluster size
-
-        const int file_size = 18; // HARDCODED to FILE_1
+        const int file_size = 512; // HARDCODED to FILE_1
 
         uint8_t string_buffer[512] = {0}; // One cluster is one sector in our case - 512 bytes, could be bigger so this need to be calculated
 
         memcpy(string_buffer, file_start, file_size);
 
-        puts("\n\n --> Content of the file FILE_1");
+        puts("\n\n --> Content of the file FILE_D11");
         puts(string_buffer);
     }
 }
 
-
+// TODO: Add the range check for path
 int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const path)
 {
     // TODO: implement, basically just find the first cluster
-#if 1
-    handle->first_cluster_no = 0; // Zero is invalid value
+
+    handle->first_cluster_no = 0; // Zero means root dir entry
     handle->seek = 0;
+
+#if 0
 
     // Dummy stub for testing
 
@@ -309,6 +328,73 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
             return e_SUCCESS;
         }
     }
+#else
+
+    // Dummy stub for testing
+    if( 0 == strcmp(path, "/"))
+    {
+        handle->first_cluster_no = 0;
+    }
+    else if ( 0 == strcmp(path, "/DIR_2/"))
+    {
+        handle->first_cluster_no = 3;
+    }
+    else
+    {
+        handle->first_cluster_no = 0;
+
+        const uint8_t *start_name = path +1 ;
+        const uint8_t *seek = path +1;
+
+        for(; '/' != *seek; seek++ ); // Find the next '/' char
+
+        // TODO: this really needs clean up
+        // TODO: this just check first name in path, need to check all
+        {
+            // Offsets for directory entry structure
+            const uint_fast8_t file_name_64b        = 0x00;
+            const uint_fast8_t file_extension_24b   = 0x08;
+            const uint_fast8_t file_attributes_8b   = 0x0b;
+            const uint_fast8_t file_1st_cluster_16b = 0x1a;
+            const uint_fast8_t file_size_32b        = 0x1c;
+
+            // TODO: hardcoded at the moment - calculate it from the VBR data
+            const uint_fast8_t directory_slots_num = 16;
+
+            for( int i = 0; i < directory_slots_num; i++ )
+            {
+                // TODO: duplicated code
+                const uint8_t* directory_entry_base = find_root_table_address() + i*32;
+
+                // First byte in file name have special meaning. If zero - slot is unused
+                if( 0 == *directory_entry_base )
+                {
+                    return e_FILE_NOT_FOUND; // Rest of the slots are also empty according to the specs
+                }
+
+                uint8_t file_attributes = read__8(directory_entry_base, file_attributes_8b);
+
+                // Check if it is a volume entry, and skip it
+                if( 0x08 == file_attributes )
+                {
+                    i++;
+                    directory_entry_base = find_root_table_address() + i*32; // 32 is the size of the directory entry structure
+                }
+
+                // check the entry data
+                if( 0 == strncmp(start_name, directory_entry_base, seek-start_name))
+                {
+                    handle->first_cluster_no = read_16(directory_entry_base, file_1st_cluster_16b);
+                    return e_SUCCESS;;
+                }
+            }
+        }
+
+
+        return e_FILE_NOT_FOUND;
+    }
+
+    return e_SUCCESS;
 #endif
 
     return e_FILE_NOT_FOUND;
@@ -316,7 +402,7 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
 
 int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_entry_t* const dir_entry )
 {
-#if 1
+#if 0
     // Dummy stub for testing
 
     static directory_entry_t dummy_entries[][3] =
@@ -357,7 +443,66 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
         }
     }
 #else
-    // TODO: implement -> fetch the entry data using cluster number and seek
+    // Offsets for directory entry structure
+    const uint_fast8_t file_name_64b        = 0x00;
+    const uint_fast8_t file_extension_24b   = 0x08;
+    const uint_fast8_t file_attributes_8b   = 0x0b;
+    const uint_fast8_t file_1st_cluster_16b = 0x1a;
+    const uint_fast8_t file_size_32b        = 0x1c;
+
+    {
+        const uint8_t* directory_entry_base = find_root_table_address() + handle->seek*32; // 32 is the size of the directory entry structure
+
+        if( 0 != handle->first_cluster_no )
+        {
+            directory_entry_base = find_cluster_address(handle->first_cluster_no) + handle->seek*32;
+        }
+
+        // First byte in file name have special meaning. If zero - slot is unused
+        if( 0 == *directory_entry_base )
+        {
+            return e_END_OF_DIR; // Rest of the slots are also empty according to the specs
+        }
+
+        uint8_t file_attributes = read__8(directory_entry_base, file_attributes_8b);
+
+        // Check if it is a volume entry, and skip it
+        if( 0x08 == file_attributes )
+        {
+            handle->seek++;
+            directory_entry_base = find_root_table_address() + handle->seek*32; // 32 is the size of the directory entry structure
+        }
+
+        // Fetch the entry data
+        strncpy(dir_entry->name, directory_entry_base, 11); // Get both the name and extension
+
+        dir_entry->name[ sizeof(dir_entry->name) -1 ] = 0; // Null-terminate the string
+
+        dir_entry->size = read_32(directory_entry_base, file_size_32b);
+
+        file_attributes = read__8(directory_entry_base, file_attributes_8b);
+
+        if( 0x10 == file_attributes )
+        {
+            dir_entry->type = e_DIRECTORY;
+        }
+        else
+        {
+            dir_entry->type = e_FILE;
+        }
+
+#if 0
+        printf("\n\n ENTRY NO.%i", handle->seek);
+        printf("\n   File name:   %s", file_name);
+        printf("\n   File attributes:   %#x", read__8(directory_entry_base, file_attributes_8b));
+        printf("\n   First cluster:     %#x", read_16(directory_entry_base, file_1st_cluster_16b));
+        printf("\n   File size:         %i",  read_32(directory_entry_base, file_size_32b));
+#endif
+
+        handle->seek++;
+
+        return e_SUCCESS;
+    }
 
 #endif
     return e_END_OF_DIR;
@@ -552,7 +697,7 @@ static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
     }
     else
     {
-        printf("\n Directory not fund %s \n", shell_pwd);
+        printf("\n Directory not found %s \n", shell_pwd);
     }
 
 
