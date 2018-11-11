@@ -97,8 +97,8 @@ enum
 }
 e_dirEntryType;
 
-// File system is read-only and there will bi no internal states or allocated buffers, s
-// so no point in open and close functions...
+// File system is read-only and there will be no internal states or allocated buffers,
+// so no point in "open" and "close" functions...
 
 int8_t find_directory            ( directory_handle_t* const handle, const uint8_t* const path);
 int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_entry_t* const dir_entry );
