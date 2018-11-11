@@ -181,7 +181,7 @@ static const uint8_t* get_address_of_data_area(void)
     return get_address_of_rootDirectory_table() + get_size_of_rootDirectory_table();
 }
 
-static const uint8_t* find_cluster_address( int cluster_no )
+static const uint8_t* get_address_of_cluster( int cluster_no )
 {
     // TODO: implement this
 
@@ -332,7 +332,7 @@ static void print_image_info(void)
 
         for( int i = 0; i < directory_slots_num; i++ )
         {
-            const uint8_t* const directory_entry_base = find_cluster_address(3) // Dir_1 is located in 2nd cluster (cluster no.3)
+            const uint8_t* const directory_entry_base = get_address_of_cluster(3) // Dir_1 is located in 2nd cluster (cluster no.3)
                                                         + i*32; // 32 is the size of the directory entry structure
 
             // First byte in file name have special meaning. If zero - slot is unused
@@ -355,7 +355,7 @@ static void print_image_info(void)
     // Experimental reading of file content
     // TEMP HARDCODED: Print a content of a file FILE_1 of current image
     {
-        const uint8_t* const file_start = find_cluster_address(2); // cluster_start + cluster no. * cluster size
+        const uint8_t* const file_start = get_address_of_cluster(2); // cluster_start + cluster no. * cluster size
 
         const int file_size = 512; // HARDCODED to FILE_1
 
@@ -518,7 +518,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
         if( 0 != handle->first_cluster_no )
         {
-            directory_entry_base = find_cluster_address(handle->first_cluster_no) + handle->seek*32;
+            directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*32;
         }
 
         // First byte in file name have special meaning. If zero - slot is unused
