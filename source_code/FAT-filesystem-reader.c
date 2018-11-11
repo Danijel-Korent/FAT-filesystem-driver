@@ -7,10 +7,14 @@
 #include "../fat_images/FAT12_3-clusters-clean.h" // Here is located an array of file system binary image
 
 // TODO NEXT:
+//      - Remove test stubs stuff (and remove print_image_info?)
+//      - Finish implementation of the find_directory() -> Only iterating root and 1st level directories
 //      - Implement interface for reading files
 //      - Implement cat command
 //      - "cd .." not working
 //      - "cd ." not working
+//      - Finish support for FAT32
+//      - Add sexy coloring to the shell prompt
 
 
 
