@@ -6,10 +6,14 @@
 
 #include "../fat_images/FAT12_3-clusters-clean.h" // Here is located an array of file system binary image
 
-// Helper functions to fetch the data (data is encoded in little-endian format)
-static inline uint16_t read_16(const unsigned char *buffer, int offset);
-static inline uint32_t read_32(const unsigned char *buffer, int offset);
-static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
+// TODO NEXT:
+//      - Implement interface for reading files
+//      - Implement cat command
+//      - "cd .." not working
+//      - "cd ." not working
+
+
+
 
     // Info:
     // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
@@ -57,11 +61,6 @@ static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This
     *   511 - 512 - Boot sector signature
     */
 
-// TODO NEXT:
-//      - Implement interface for reading files
-//      - Implement cat command
-//      - "cd .." not working
-//      - "cd ." not working
 
 // Okay, so we now know how to find data and how the data is encoded, time to implement interfaces
 typedef struct directory_handle_tag
@@ -117,6 +116,12 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
 int8_t find_file( file_handle_t* const handle, const uint8_t* const path );
 int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint32_t buffer_size, uint32_t* const successfully_read);
+
+
+// Helper functions to fetch the data (data is encoded in little-endian format)
+static inline uint16_t read_16(const unsigned char *buffer, int offset);
+static inline uint32_t read_32(const unsigned char *buffer, int offset);
+static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
 
 // TODO: TEMP
 const unsigned char* const FS_image = FAT12_3_clusters_clean;
