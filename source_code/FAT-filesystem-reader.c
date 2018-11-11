@@ -124,6 +124,21 @@ static const uint8_t get_FAT_type(void)
     return e_FAT12;
 }
 
+static const uint32_t get_size_of_reserved_sectors(void)
+{
+
+}
+
+static const uint8_t* get_address_of_FAT_table(void)
+{
+    // TODO: implement this
+    return FS_image + 512;
+}
+
+static const uint32_t get_size_of_FAT_table(void)
+{
+
+}
 
 static const uint8_t* get_address_of_rootDirectory_table( void )
 {
@@ -155,6 +170,18 @@ static const uint8_t* get_address_of_rootDirectory_table( void )
     uint32_t offset = (num_of_reserved_sectors + num_of_fat_sectors) * size_of_sector;
 
     return FS_image + offset;
+}
+
+static const uint8_t* get_address_of_data_area(void)
+{
+    if( e_FAT32 == get_FAT_type() )
+    {
+
+    }
+    else
+    {
+
+    }
 }
 
 static const uint8_t* find_cluster_address( int cluster_no )
