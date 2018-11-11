@@ -137,7 +137,7 @@ static const uint8_t* get_address_of_rootDirectory_table( void )
     // All this could easily be buffered, but I'm not concerned with that in this hobby project
     // TODO: add range asserts for these values, ex. none of these values should be zero
     uint16_t size_of_sector          = read_16(FS_image, BYTES_PER_SECTOR_16b);
-    uint8_t  num_of_reserved_sectors = read_16(FS_image, NUM_RESERVED_SECTORS_16b);
+    uint16_t num_of_reserved_sectors = read_16(FS_image, NUM_RESERVED_SECTORS_16b);
 
     uint8_t  num_of_FAT_tables       = read__8(FS_image, NUM_OF_FATS);
     uint32_t sectors_per_FAT_table   = read_16(FS_image, SECTORS_PER_FAT_TABLE_16b);
