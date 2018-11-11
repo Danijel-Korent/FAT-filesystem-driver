@@ -126,62 +126,59 @@ static const uint8_t get_FAT_type(void)
 
 static const uint32_t get_size_of_reserved_sectors(void)
 {
-
-}
-
-static const uint8_t* get_address_of_FAT_table(void)
-{
-    // TODO: implement this
-    return FS_image + 512;
-}
-
-static const uint32_t get_size_of_FAT_table(void)
-{
-
-}
-
-static const uint8_t* get_address_of_rootDirectory_table( void )
-{
     // Header fields of the VBR sector (first sector of the FAT fs)
     const uint_fast8_t BYTES_PER_SECTOR_16b      = 0x0b;
     const uint_fast8_t NUM_RESERVED_SECTORS_16b  = 0x0e;
-    const uint_fast8_t NUM_OF_FATS               = 0x10;
-    const uint_fast8_t SECTORS_PER_FAT_TABLE_16b = 0x16; // Only FAT12/16
-    const uint_fast8_t FAT32_SECTORS_PER_FAT_32b = 0x24;
 
     // All this could easily be buffered, but I'm not concerned with that in this hobby project
     // TODO: add range asserts for these values, ex. none of these values should be zero
     uint16_t size_of_sector          = read_16(FS_image, BYTES_PER_SECTOR_16b);
     uint16_t num_of_reserved_sectors = read_16(FS_image, NUM_RESERVED_SECTORS_16b);
 
+    return num_of_reserved_sectors * size_of_sector;
+}
+
+static const uint8_t* get_address_of_FAT_table(void)
+{
+    return FS_image + get_size_of_reserved_sectors();
+}
+
+static const uint32_t get_size_of_FAT_table(void)
+{
+    const uint_fast8_t BYTES_PER_SECTOR_16b      = 0x0b;
+    const uint_fast8_t NUM_OF_FATS               = 0x10;
+    const uint_fast8_t SECTORS_PER_FAT_TABLE_16b = 0x16; // Only FAT12/16
+    const uint_fast8_t FAT32_SECTORS_PER_FAT_32b = 0x24;
+
+    uint16_t size_of_sector          = read_16(FS_image, BYTES_PER_SECTOR_16b);
     uint8_t  num_of_FAT_tables       = read__8(FS_image, NUM_OF_FATS);
     uint32_t sectors_per_FAT_table   = read_16(FS_image, SECTORS_PER_FAT_TABLE_16b);
 
-    // FAT32 uses different field than FAT12/16 for storing "sectors per FAT table" info
-    if( e_FAT32 == get_FAT_type() )
-    {
-        sectors_per_FAT_table = read_32(FS_image, FAT32_SECTORS_PER_FAT_32b); // SECTORS_PER_FAT_TABLE_16b is FAT12/16 only attribute
-    }
+    return num_of_FAT_tables * sectors_per_FAT_table * size_of_sector;
+}
 
-    uint32_t num_of_fat_sectors =  num_of_FAT_tables * sectors_per_FAT_table;
+static const uint8_t* get_address_of_rootDirectory_table( void )
+{
+    // TODO: Add assert that the filesystem image is not FAT32, there is no Root Directory in FAT32
 
+    // "Root directory" area begins after FAT tables
+    return FS_image + get_size_of_reserved_sectors() + get_size_of_FAT_table();
+}
 
-    // Calculate the offset into FAT image where the "root table" is located
-    uint32_t offset = (num_of_reserved_sectors + num_of_fat_sectors) * size_of_sector;
-
-    return FS_image + offset;
+static const uint32_t get_size_of_rootDirectory_table(void)
+{
+    return 0;
 }
 
 static const uint8_t* get_address_of_data_area(void)
 {
+    // In FAT32 the data area is after the FAT tables, but in FAT12/16, it is after the Root Directory area
     if( e_FAT32 == get_FAT_type() )
     {
-
+        return get_address_of_FAT_table() + get_size_of_FAT_table();
     }
-    else
-    {
 
-    }
+    return get_address_of_rootDirectory_table() + get_size_of_rootDirectory_table();
 }
 
 static const uint8_t* find_cluster_address( int cluster_no )
