@@ -125,7 +125,7 @@ static const uint8_t get_FAT_type(void)
 }
 
 
-static const uint8_t* find_root_table_address( void )
+static const uint8_t* get_address_of_rootDirectory_table( void )
 {
     // Header fields of the VBR sector (first sector of the FAT fs)
     const uint_fast8_t BYTES_PER_SECTOR_16b      = 0x0b;
@@ -165,7 +165,7 @@ static const uint8_t* find_cluster_address( int cluster_no )
     uint32_t rootdir_size = 512; // TODO: Fetch from VBR
 
     // TODO: this only works for FAT12/16. The FAT32 does not have "root directory" area
-    const uint8_t *cluster_base_address = find_root_table_address() + rootdir_size; // In this image clusters start in 1 sector after "root directory" area
+    const uint8_t *cluster_base_address = get_address_of_rootDirectory_table() + rootdir_size; // In this image clusters start in 1 sector after "root directory" area
 
     uint32_t cluster_offset =  (cluster_no - 2) * 512; // Cluster numeration starts from number 2 for some reason
 
@@ -267,7 +267,7 @@ static void print_image_info(void)
     const uint_fast8_t file_size_32b        = 0x1c;
 
     // TODO: hardcoded at the moment - calculate it from the VBR data
-    const uint8_t* const root_dir_base =  find_root_table_address();
+    const uint8_t* const root_dir_base =  get_address_of_rootDirectory_table();
     const uint_fast8_t directory_slots_num = 16;
 
     // Iterate the root directory entries and print the parameters
@@ -403,7 +403,7 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
             for( int i = 0; i < directory_slots_num; i++ )
             {
                 // TODO: duplicated code
-                const uint8_t* directory_entry_base = find_root_table_address() + i*32;
+                const uint8_t* directory_entry_base = get_address_of_rootDirectory_table() + i*32;
 
                 // First byte in file name have special meaning. If zero - slot is unused
                 if( 0 == *directory_entry_base )
@@ -417,7 +417,7 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
                 if( 0x08 == file_attributes )
                 {
                     i++;
-                    directory_entry_base = find_root_table_address() + i*32; // 32 is the size of the directory entry structure
+                    directory_entry_base = get_address_of_rootDirectory_table() + i*32; // 32 is the size of the directory entry structure
                 }
 
                 // check the entry data
@@ -490,7 +490,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
     const uint_fast8_t file_size_32b        = 0x1c;
 
     {
-        const uint8_t* directory_entry_base = find_root_table_address() + handle->seek*32; // 32 is the size of the directory entry structure
+        const uint8_t* directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
 
         if( 0 != handle->first_cluster_no )
         {
@@ -509,7 +509,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
         if( 0x08 == file_attributes )
         {
             handle->seek++;
-            directory_entry_base = find_root_table_address() + handle->seek*32; // 32 is the size of the directory entry structure
+            directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
         }
 
         // Fetch the entry data
