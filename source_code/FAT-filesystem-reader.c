@@ -57,7 +57,11 @@ static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This
     *   511 - 512 - Boot sector signature
     */
 
-// TODO NEXT: Add interface for accesing directory items and reading files
+// TODO NEXT:
+//      - Implement interface for reading files
+//      - Implement cat command
+//      - "cd .." not working
+//      - "cd ." not working
 
 // Okay, so we now know how to find data and how the data is encoded, time to implement interfaces
 typedef struct directory_handle_tag
@@ -167,7 +171,14 @@ static const uint8_t* get_address_of_rootDirectory_table( void )
 
 static const uint32_t get_size_of_rootDirectory_table(void)
 {
-    return 0;
+    // TODO: Add assert that the filesystem image is not FAT32, there is no Root Directory in FAT32
+    // TODO: Root directory should occupy an entire sector, add a check for that
+
+    const uint_fast8_t MAX_NUM_OF_ROOT_ENTRIES_16b  = 0x11; // Only FAT12/16
+
+    uint16_t num_of_root_entries = read_16(FS_image, MAX_NUM_OF_ROOT_ENTRIES_16b);
+
+    return num_of_root_entries * 32; // 32 is the size of single root directory entry
 }
 
 static const uint8_t* get_address_of_data_area(void)
@@ -183,17 +194,17 @@ static const uint8_t* get_address_of_data_area(void)
 
 static const uint8_t* get_address_of_cluster( int cluster_no )
 {
-    // TODO: implement this
+    const uint_fast8_t BYTES_PER_SECTOR_16b     = 0x0b;
+    const uint_fast8_t SECTORS_PER_CLUSTER      = 0x0d;
 
-    //uint32_t cluster_size = 512; // TODO: Fetch from VBR
-    uint32_t rootdir_size = 512; // TODO: Fetch from VBR
+    uint16_t bytes_per_sector    = read_16(FS_image, BYTES_PER_SECTOR_16b);
+    uint16_t sectors_per_cluster = read__8(FS_image, SECTORS_PER_CLUSTER);
 
-    // TODO: this only works for FAT12/16. The FAT32 does not have "root directory" area
-    const uint8_t *cluster_base_address = get_address_of_rootDirectory_table() + rootdir_size; // In this image clusters start in 1 sector after "root directory" area
+    uint32_t cluster_size = sectors_per_cluster * bytes_per_sector;
 
-    uint32_t cluster_offset =  (cluster_no - 2) * 512; // Cluster numeration starts from number 2 for some reason
+    uint32_t cluster_offset = (cluster_no - 2) * cluster_size; // Cluster numeration starts from number 2 for some reason
 
-    return cluster_base_address + cluster_offset;
+    return get_address_of_data_area() + cluster_offset;
 }
 
 
