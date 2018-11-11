@@ -6,7 +6,7 @@
 
 #include "../fat_images/FAT12_3-clusters-clean.h" // Here is located an array of file system binary image
 
-
+// Helper functions to fetch the data (data is encoded in little-endian format)
 static inline uint16_t read_16(const unsigned char *buffer, int offset);
 static inline uint32_t read_32(const unsigned char *buffer, int offset);
 static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
@@ -109,19 +109,23 @@ int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint
 // TODO: TEMP
 const unsigned char* const FS_image = FAT12_3_clusters_clean;
 
-const uint8_t* find_root_table_address( void )
+static const uint8_t* find_root_table_address( void )
 {
     // TODO: implement this
+    // offset = size_of_reserved_sectors + size_of_FAT_table_sectors
+    // size_of_reserved_sectors  = NUM_RESERVED_SECTORS * BYTES_PER_SECTOR
+    // size_of_FAT_table_sectors = BYTES_PER_SECTOR * (NUM_OF_FATS * SECTORS_PER_FAT_TABLE_16b?? ) // TODO clarify: SECTORS_PER_FAT_TABLE_16b is FAT12/16 only??
     return FS_image + 1024;
 }
 
-const uint8_t* find_cluster_address( int cluster_no )
+static const uint8_t* find_cluster_address( int cluster_no )
 {
     // TODO: implement this
 
-    uint32_t cluster_size = 512; // TODO: hardcoded
-    uint32_t rootdir_size = 512;
+    //uint32_t cluster_size = 512; // TODO: Fetch from VBR
+    uint32_t rootdir_size = 512; // TODO: Fetch from VBR
 
+    // TODO: this only works for FAT12/16. The FAT32 does not have "root directory" area
     const uint8_t *cluster_base_address = find_root_table_address() + rootdir_size; // In this image clusters start in 1 sector after "root directory" area
 
     uint32_t cluster_offset =  (cluster_no - 2) * 512; // Cluster numeration starts from number 2 for some reason
@@ -152,7 +156,7 @@ static void print_image_info(void)
     const uint_fast8_t NUM_OF_TOTAL_SECTORS_16b = 0x13; // Used if partition is smaler than 32MB
     const uint_fast8_t MEDIA_DESCRIPTOR         = 0x15;
 
-    const uint_fast8_t SECTORS_PER_ALLOC_TBL_16b = 0x16; // Only FAT12/16
+    const uint_fast8_t SECTORS_PER_FAT_TABLE_16b = 0x16; // Only FAT12/16
     const uint_fast8_t SECTORS_PER_TRACK_16b     = 0x18;
     const uint_fast8_t NUM_OF_HEADS_16b          = 0x1a;
     const uint_fast8_t HIDDEN_SECTORS_32b        = 0x1c;
