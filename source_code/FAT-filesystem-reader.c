@@ -14,8 +14,11 @@
 //      - Implement cat command
 //      - Add file sizes to the "ls" command output
 //      - Add support for multi-cluster data (FAT table processing)
-//      - "cd .." not working
-//      - "cd ." not working
+//      - Add a bigger FAT12 image (64k?)
+//      - Add a FAT16 image (minimal size is 2MB??) (modify mkfs.fat to allow sectors smaller than 512B?)
+//      - BUG: "cd .." not working
+//      - BUG: "cd ." not working
+//      - BUG: can "cd" into any imaginary folder (find directory check no longer works )
 //      - Finish support for FAT32
 //      - Add support for long names
 //      - Add sexy coloring to the shell prompt
