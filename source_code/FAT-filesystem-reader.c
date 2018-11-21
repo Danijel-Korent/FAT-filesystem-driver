@@ -16,6 +16,7 @@
 //      - Add support for multi-cluster data (FAT table processing)
 //      - Add a bigger FAT12 image (64k?)
 //      - Add a FAT16 image (minimal size is 2MB??) (modify mkfs.fat to allow sectors smaller than 512B?)
+//      - BUG: "cd DIR" inters into DIR_1
 //      - BUG: "cd .." not working
 //      - BUG: "cd ." not working
 //      - Finish support for FAT32
