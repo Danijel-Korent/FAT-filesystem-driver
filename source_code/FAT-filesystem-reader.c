@@ -18,7 +18,6 @@
 //      - Add a FAT16 image (minimal size is 2MB??) (modify mkfs.fat to allow sectors smaller than 512B?)
 //      - BUG: "cd .." not working
 //      - BUG: "cd ." not working
-//      - BUG: can "cd" into any imaginary folder (find directory check no longer works )
 //      - Finish support for FAT32
 //      - Add support for long names
 //      - Add sexy coloring to the shell prompt
@@ -424,7 +423,15 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
     }
 #else
 
-    // Dummy stub for testing
+    // If the string is empty
+    if( 0 == path[0] )
+    {
+        return e_FILE_NOT_FOUND; // TODO: this must return error instead of file not found
+    }
+
+    // TODO: assert that first char indeed is '/'
+
+    // For root dir the cluser is zero
     if( 0 == strcmp(path, "/"))
     {
         handle->first_cluster_no = 0;
@@ -433,10 +440,29 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
     {
         handle->first_cluster_no = 0;
 
-        const uint8_t *start_name = path +1 ;
-        const uint8_t *seek = path +1;
+        // Skip the first char that should always be '/'
+        const uint8_t* start_of_name = path +1;
+        const uint8_t*   end_of_name = path +1;
 
-        for(; ('/' != *seek && 0 == *seek  ); seek++ ); // Find the next '/' char
+        // Interate the "end_of_name" to the next '/' char
+        for(; ('/' != *end_of_name) && (0 != *end_of_name  ); end_of_name++ );
+
+        // Check that the requested directory name is not bigger than currently supported
+        uint32_t name_size = end_of_name-start_of_name;
+
+        if( name_size > MAX_NAME_SIZE)
+        {
+            return e_FILE_NOT_FOUND; // TODO: again this must return error instead of file not found
+        }
+
+        // Currently the code only process first level directories (directories in root)
+        // if there is more than one directory in path, just return from function
+        if( 0 != *(end_of_name+1) ) return e_FILE_NOT_FOUND;
+
+
+        // Copy the name of the first directory in path into the input_directory_name
+        char input_directory_name[MAX_NAME_SIZE + 1] = {0};
+        strncpy( input_directory_name, start_of_name, name_size);
 
         // TODO: this really needs cleaning up
         // TODO: this just checks root level folders, make a loop to seek all levels until the null-terminator
@@ -464,15 +490,25 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
 
                 uint8_t file_attributes = read__8(directory_entry_base, file_attributes_8b);
 
-                // Check if it is a volume entry, and skip it
-                if( 0x08 == file_attributes )
+                // TODO: replace magic numbers
+                // 0x10 is flag for directory
+                if( 0 == (0x10 & file_attributes) )
                 {
-                    i++;
-                    directory_entry_base = get_address_of_rootDirectory_table() + i*32; // 32 is the size of the directory entry structure
+                    continue; // Only proceed if the entry is directory
                 }
 
+                uint8_t fat_directory_name[MAX_NAME_SIZE + 1] = {0};
+
+                strncpy( fat_directory_name, directory_entry_base, MAX_NAME_SIZE);
+
+                // Null-terminate fat_directory_name on first space char
+                // TODO: refactor this into something readable
+                uint8_t* iter = fat_directory_name;
+                for(; (' ' != *iter) && (0 != *iter  ); iter++ ); // Find the first space char
+                *iter = 0;
+
                 // check the entry data
-                if( 0 == strncmp(start_name, directory_entry_base, seek-start_name))
+                if( 0 == strncmp(input_directory_name, fat_directory_name, name_size))
                 {
                     handle->first_cluster_no = read_16(directory_entry_base, file_1st_cluster_16b);
                     return e_SUCCESS;;
