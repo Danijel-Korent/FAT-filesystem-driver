@@ -227,31 +227,8 @@ static const uint8_t* get_address_of_cluster( int cluster_no )
 // TODO: Add the range check for path
 int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const path)
 {
-    // TODO: implement, basically just find the first cluster
-
     handle->first_cluster_no = 0; // Zero means root dir entry
-    handle->seek = 0;
-
-#if 0
-
-    // Dummy stub for testing
-
-    static uint8_t dummy_directory_names[][100] =
-    {
-        {"/"},
-        {"/home/"},
-        {"/home/user/"}
-    };
-
-    for( int i = 0; i < sizeof(dummy_directory_names)/sizeof(dummy_directory_names[0]); i++)
-    {
-        if( 0 == strcmp(path, dummy_directory_names[i]) )
-        {
-            handle->first_cluster_no = i + 1;
-            return e_SUCCESS;
-        }
-    }
-#else
+    handle->seek = 0; // I don't event remember what's the purpose of this attribute, should have documented it
 
     // If the string is empty
     if( 0 == path[0] )
@@ -265,8 +242,11 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
     if( 0 == strcmp(path, "/"))
     {
         handle->first_cluster_no = 0;
+        return e_SUCCESS;
     }
-    else
+
+
+    // TODO: this really needs cleaning up
     {
         handle->first_cluster_no = 0;
 
@@ -345,60 +325,13 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
                 }
             }
         }
-
-
-        return e_FILE_NOT_FOUND;
     }
-
-    return e_SUCCESS;
-#endif
 
     return e_FILE_NOT_FOUND;
 }
 
 int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_entry_t* const dir_entry )
 {
-#if 0
-    // Dummy stub for testing
-
-    static directory_entry_t dummy_entries[][3] =
-    {
-        {
-            // root
-            {"home",   e_DIRECTORY,        0},
-            {"root_file01", e_FILE,        0},
-            {"root_file02", e_FILE,       10}
-        },
-        {
-            // home
-            //{".",     e_DIRECTORY,   0},
-            //{"..",    e_DIRECTORY,   0},
-            {"user",   e_DIRECTORY,        0},
-            {"home_file11", e_FILE,        0},
-            {"home_file12", e_FILE,       11}
-        },
-        {
-            //user
-            {"user_file21", e_FILE,        0},
-            {"user_file22", e_FILE,        0},
-            {"user_file23", e_FILE,       12}
-        }
-    };
-
-    if( handle->seek < sizeof(dummy_entries[0])/sizeof(dummy_entries[0][0]) )
-    {
-        size_t index = handle->first_cluster_no - 1;
-
-        size_t table_size = sizeof(dummy_entries) / sizeof(dummy_entries[0]);
-
-        if( index < table_size )
-        {
-            *dir_entry = dummy_entries[index][handle->seek++];
-
-            return e_SUCCESS;
-        }
-    }
-#else
     // Offsets for directory entry structure
     const uint_fast8_t file_name_64b        = 0x00;
     const uint_fast8_t file_extension_24b   = 0x08;
@@ -460,7 +393,6 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
         return e_SUCCESS;
     }
 
-#endif
     return e_END_OF_DIR;
 }
 
@@ -553,7 +485,6 @@ static void run_pseudo_shell(void)
 
 static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
 {
-#if 1
     // TODO: validate/sanitize input args, currently PWD is just updated without any checks
 
     if( NULL == args || 0 == args_lenght)
@@ -603,9 +534,6 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
         printf("cd: directory \"%s\" not found!", shell_pwd);
         strncpy(shell_pwd, old_pwd, MAX_PATH_SIZE);
     }
-#else
-    printf("cd unimplemented");
-#endif
 }
 
 static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
