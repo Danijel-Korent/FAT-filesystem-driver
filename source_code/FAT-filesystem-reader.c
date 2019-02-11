@@ -4,7 +4,7 @@
 #include <string.h>  //strcmp
 
 
-#include "../fat_images/FAT12_3-clusters-clean.h" // Here is located an array of file system binary image
+#include "../fat_images/FAT12_3-clusters-clean.h" // Here located file system binary image in byte array
 
 // TODO NEXT:
 //      - Add check for deleted entries
@@ -15,8 +15,8 @@
 //      - Add file sizes to the "ls" command output
 //      - Add support for multi-cluster data (FAT table processing)
 //      - Add a bigger FAT12 image (64k?)
-//      - Add a FAT16 image (minimal size is 2MB??) (modify mkfs.fat to allow sectors smaller than 512B?)
-//      - BUG: "cd DIR" inters into DIR_1
+//      - Add a FAT16 image (minimal size is 2MB??) (maybe modify mkfs.fat to allow sectors smaller than 512B?)
+//      - BUG: "cd DIR" enters into DIR_1
 //      - BUG: "cd .." not working
 //      - BUG: "cd ." not working
 //      - Finish support for FAT32
@@ -628,9 +628,6 @@ static inline uint8_t read__8(const unsigned char *buffer, int offset)
 // Temporary experimental function
 static void print_image_info(void)
 {
-    // TODO: put all necessary logic here, and then split it into functional parts later
-
-
     // Offsets of the Volume Boot Record (VBR)
     // - BIOS Parametar block - Common data for FAT 12/16/32 (up to 0x23)
     const uint_fast8_t dummy                    = 0x00;
