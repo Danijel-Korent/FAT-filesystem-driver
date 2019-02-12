@@ -4,24 +4,23 @@
 #include <string.h>  //strcmp
 
 
-#include "../fat_images/FAT12_3-clusters-clean.h" // Here located file system binary image in byte array
+#include "../fat_images/FAT12_3-clusters-clean.h" // Here is located file system binary image (in a big byte array)
 
 // TODO NEXT:
-//      - Add check for deleted entries
-//      - Remove test stubs stuff (and remove print_image_info?)
-//      - Finish implementation of the find_directory() -> Only iterating root and 1st level directories
-//      - Implement interface for reading files (at least first sector)
-//      - Implement cat command
-//      - Add file sizes to the "ls" command output
-//      - Add support for multi-cluster data (FAT table processing)
-//      - Add a bigger FAT12 image (64k?)
-//      - Add a FAT16 image (minimal size is 2MB??) (maybe modify mkfs.fat to allow sectors smaller than 512B?)
-//      - BUG: "cd DIR" enters into DIR_1
-//      - BUG: "cd .." not working
-//      - BUG: "cd ." not working
-//      - Finish support for FAT32
-//      - Add support for long names
-//      - Add sexy coloring to the shell prompt
+//      - TODO:    Add check for deleted entries
+//      - TODO:    Remove test stubs stuff (and remove print_image_info?)
+//      - BUG:     Finish implementation of the find_directory() -> Only iterating root and 1st level directories
+//      - FEATURE: Implement interface for reading files (at least first sector)
+//      - FEATURE: Implement cat command
+//      - FEATURE: Add file sizes to the "ls" command output
+//      - FEATURE: Add support for multi-cluster data (FAT table processing)
+//      - TODO:    Add a bigger FAT12 image (64k?)
+//      - TODO:    Add a FAT16 image (minimal size is 2MB??) (maybe modify mkfs.fat to allow sectors smaller than 512B?)
+//      - BUG:     "cd DIR" enters into DIR_1
+//      - FEATURE: Skip leading whitespace from input ( ' ls' currently reports unknown command)
+//      - FEATURE: Add support for FAT32
+//      - FEATURE: Add support for long names
+//      - FEATURE: Add sexy coloring to the shell prompt
 
 
 
@@ -119,7 +118,7 @@ enum
 }
 e_FatType;
 
-// File system is read-only and there will be no internal states or allocated buffers,
+// This reader is read-only and there will be no internal states or allocated buffers,
 // so no point in "open" and "close" functions...
 
 int8_t find_directory            ( directory_handle_t* const handle, const uint8_t* const path);
@@ -407,7 +406,7 @@ static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght);
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
 #define MAX_INPUT_LEN (100 + 1)
 
-uint8_t shell_pwd[MAX_PATH_SIZE]  = "/";
+static uint8_t shell_pwd[MAX_PATH_SIZE]  = "/";
 
 
 static void run_pseudo_shell(void)
@@ -418,6 +417,7 @@ static void run_pseudo_shell(void)
 
     printf("\n\n\nshell:%s $ ", shell_pwd);
 
+    // Main loop for shell
     while (NULL != fgets(user_input, sizeof(user_input), stdin))
     {
          // NUll-terminate input, just in case
@@ -450,7 +450,7 @@ static void run_pseudo_shell(void)
 
             size_t current_input_len = strlen(user_input) + 1; // + null-terminator
 
-            // TODO: duplicated code
+            // TODO REFACTOR: duplicated code
             if( current_input_len > (3 + 1) )
             {
                 args     = user_input + 3;
@@ -464,7 +464,7 @@ static void run_pseudo_shell(void)
             uint8_t *args      = NULL;
             uint32_t args_len  = 0;
 
-            // TODO: duplicated code
+            // TODO REFACTOR: duplicated code
             size_t current_input_len = strlen(user_input) + 1; // + null-terminator
 
             if( current_input_len > (3 + 1) )
@@ -503,8 +503,33 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
     // Update the shell pwd to new path
     if( '/' == args[0] )
     {
-        // If full path just copy the argument
+        // If absolute path just copy the argument
         strncpy( shell_pwd, args, sizeof(shell_pwd) - 1);
+    }
+    else if( '.' == args[0] )
+    {
+        size_t current_pwd_len   = strlen(shell_pwd);
+
+        // If just one dot - do nothing
+        // if two, move one directory back
+        if( '.' == args[1] )
+        {
+            // If it's not in root
+            if( current_pwd_len > 2 )
+            {
+                int start_pos = current_pwd_len-2; // leave out the last '/' in pwd
+
+                // find first '/' while iterating backwards, and cut the string at that point
+                for( int i = start_pos; i >= 0; i-- )
+                {
+                    if( '/' == shell_pwd[i] )
+                    {
+                        shell_pwd[i+1] = 0;
+                        break;
+                    }
+                }
+            }
+        }
     }
     else
     {
@@ -516,8 +541,6 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
         {
             strcat(shell_pwd, args);
         }
-
-        current_pwd_len = strlen(shell_pwd);
     }
 
     // Append '/' at the end if it is not there
