@@ -16,7 +16,6 @@
 //      - FEATURE: Add support for multi-cluster data (FAT table processing)
 //      - TODO:    Add a bigger FAT12 image (64k?)
 //      - TODO:    Add a FAT16 image (minimal size is 2MB??) (maybe modify mkfs.fat to allow sectors smaller than 512B?)
-//      - BUG:     "cd DIR" enters into DIR_1
 //      - FEATURE: Skip leading whitespace from input ( ' ls' currently reports unknown command)
 //      - FEATURE: Add support for FAT32
 //      - FEATURE: Add support for long names
@@ -318,7 +317,7 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
                 *iter = 0;
 
                 // check the entry data
-                if( 0 == strncmp(input_directory_name, fat_directory_name, name_size))
+                if( 0 == strncmp(input_directory_name, fat_directory_name, MAX_NAME_SIZE +1))
                 {
                     handle->first_cluster_no = read_16(directory_entry_base, file_1st_cluster_16b);
                     return e_SUCCESS;;
