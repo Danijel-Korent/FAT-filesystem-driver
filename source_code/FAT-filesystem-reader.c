@@ -5,6 +5,7 @@
 
 
 #include "../fat_images/FAT12_3-clusters-clean.h" // Here is located file system binary image (in a big byte array)
+#include "../fat_images/FAT12_7-clusters-clean.h"
 
 // TODO NEXT:
 //      - TODO:    Add check for deleted entries
@@ -34,14 +35,30 @@
     //          - 3k total size, with 3 clusters * 512bytes = 1536bytes free space
     //          - works in linux (r/w), can read on windows10, but sometimes crashes explorer.exe on write
     //
-    //          /home/danijel/fat_proj/dosfstools/src/mkfs.fat -vvv -F 12 -f 1 -r 16 -R 1 -n POKUS -s 1 -C FAT12_3-clusters-clean 3 > FAT12_3-clusters-clean_info.txt
+    //          -F FAT type = FAT12
+    //          -f number of fat tables = 1
+    //          -r number of root dir entries = 16
+    //          -R number of reserved sectors = 1
+    //          -n Volume name
+    //          -s Sectors per cluster = 1
+    //          -C create FS in a file
+    //          block-count -> number of 1k blocks = 3
     //
+    //          /home/danijel/fat_proj/dosfstools/src/mkfs.fat -vvv -F 12 -f 1 -r 16 -R 1 -n POKUS -s 1 -C FAT12_3-clusters-clean 3 > FAT12_3-clusters-clean_info.txt
+
+    //      - FAT12 image with 7 clusters + 16 root entries
+    //          /home/danijel/fat_proj/dosfstools/src/mkfs.fat -vvv -F 12 -f 1 -r 16 -R 1 -n POKUS -s 1 -C FAT12_7-clusters-clean 5 > FAT12_7-clusters-clean.txt
+
+    //      - Converting to c header:
+    //          xxd -i FAT12_7-clusters-clean > FAT12_7-clusters-clean.h
+
+
 
     /*************************************************************************************
     * OVERALL STRUCTURE OF FAT FS
     *
     *  RESERVED SECTORS
-    *      - VBR - Volume boot record / partition boot sector (1sector/512bytes)
+    *      - VBR - Volume boot record / partition boot sector (1st sector/512bytes)
     *      - FS Information Sector (FAT32 only)
     *      - Rest of reserved sectors
     *  FAT TABLE #1
@@ -354,11 +371,37 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
         uint8_t file_attributes = read__8(directory_entry_base, file_attributes_8b);
 
+        // TODO: This is really a hack, move volume check and long name check into the loop
         // Check if it is a volume entry, and skip it
         if( 0x08 == file_attributes )
         {
             handle->seek++;
-            directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
+
+            if( 0 != handle->first_cluster_no )
+            {
+                directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*32;
+            }
+            else
+            {
+                directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
+            }
+
+            file_attributes = read__8(directory_entry_base, file_attributes_8b);
+        }
+
+        // Check if it is a "long file name" entry, and skip it
+        if( 0x0F == file_attributes )
+        {
+            handle->seek++;
+
+            if( 0 != handle->first_cluster_no )
+            {
+                directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*32;
+            }
+            else
+            {
+                directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
+            }
         }
 
         // Fetch the entry data
@@ -381,7 +424,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
 #if 0
         printf("\n\n ENTRY NO.%i", handle->seek);
-        printf("\n   File name:   %s", file_name);
+        printf("\n   File name:   %s", dir_entry->name);
         printf("\n   File attributes:   %#x", read__8(directory_entry_base, file_attributes_8b));
         printf("\n   First cluster:     %#x", read_16(directory_entry_base, file_1st_cluster_16b));
         printf("\n   File size:         %i",  read_32(directory_entry_base, file_size_32b));
