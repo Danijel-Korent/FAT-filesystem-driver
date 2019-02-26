@@ -20,6 +20,7 @@
 //      - FEATURE: Skip leading whitespace from input ( ' ls' currently reports unknown command)
 //      - FEATURE: Add support for FAT32
 //      - FEATURE: Add support for long names
+//      - FEATURE: Add support for history in shell
 //      - FEATURE: Add sexy coloring to the shell prompt
 
 
