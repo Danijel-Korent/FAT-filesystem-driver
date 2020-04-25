@@ -637,11 +637,11 @@ static void execute_command_ls(uint8_t* const args, const uint32_t args_length)
 
         while( e_END_OF_DIR != read_next_directory_entry( &dir_handle, &dir_entry ) )
         {
-            uint8_t *type = "file";
+            uint8_t *type = " dir";
 
             if( e_FILE == dir_entry.type )
             {
-                type = " dir";
+                type = "file";
             }
 
             printf(" %s %6i  %s \n", type, dir_entry.size , dir_entry.name);
