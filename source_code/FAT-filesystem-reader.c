@@ -93,9 +93,10 @@
 typedef struct directory_handle_tag
 {
     uint32_t first_cluster_no;
-    uint32_t seek;
+    uint32_t seek; // TODO: Rename this to current directory entry. It is used by function read_next_directory_entry()
 } directory_handle_t;
 
+// Limitation of the initial FAT fs specification
 #define MAX_NAME_SIZE (11)
 
 typedef struct directory_entry_tag
@@ -241,7 +242,7 @@ static const uint8_t* get_address_of_cluster( int cluster_no )
 }
 
 
-// TODO: Add the range check for path
+// TODO: Add the size check for buffer containing path string
 int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const path)
 {
     handle->first_cluster_no = 0; // Zero means root dir entry
@@ -443,8 +444,8 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 /***********************************************************************************************************************
  *                                            PSEUDO SHELL SECTION                                                     *
  ***********************************************************************************************************************/
-static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght);
-static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght);
+static void execute_command_cd(uint8_t* const args, const uint32_t args_length);
+static void execute_command_ls(uint8_t* const args, const uint32_t args_length);
 
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
 #define MAX_INPUT_LEN (100 + 1)
@@ -527,11 +528,11 @@ static void run_pseudo_shell(void)
     }
 }
 
-static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
+static void execute_command_cd(uint8_t* const args, const uint32_t args_length)
 {
     // TODO: validate/sanitize input args, currently PWD is just updated without any checks
 
-    if( NULL == args || 0 == args_lenght)
+    if( NULL == args || 0 == args_length)
     {
         return; // Nothing to do here, maybe print no args..
     }
@@ -541,7 +542,7 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
     strncpy(old_pwd, shell_pwd, MAX_PATH_SIZE);
 
     // NUll-terminate, just in case
-    args[args_lenght-1] = 0;
+    args[args_length-1] = 0;
 
     // Update the shell pwd to new path
     if( '/' == args[0] )
@@ -577,10 +578,10 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
     else
     {
         // If relative path - append argument to current pwd
-        size_t current_pwd_len   = strlen(shell_pwd); // Without null-term, but args_lenght already inludes null-terminator size
+        size_t current_pwd_len   = strlen(shell_pwd); // Without null-term, but args_length already inludes null-terminator size
         size_t max_available_len = sizeof(shell_pwd); // With null termn
 
-        if( ( current_pwd_len + args_lenght) < max_available_len )
+        if( ( current_pwd_len + args_length) < max_available_len )
         {
             strcat(shell_pwd, args);
         }
@@ -591,7 +592,7 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
 
     if( '/' != shell_pwd[last_char_index])
     {
-        strcat(shell_pwd, "/"); // TODO: check if there is enought space for this
+        strcat(shell_pwd, "/"); // TODO: check if there is enough space for this
     }
 
     // If directory in updated shell pwd cannot be found, restore old pwd
@@ -603,7 +604,7 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_lenght)
     }
 }
 
-static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
+static void execute_command_ls(uint8_t* const args, const uint32_t args_length)
 {
 #if 1
 
@@ -611,17 +612,17 @@ static void execute_command_ls(uint8_t* const args, const uint32_t args_lenght)
 #if 0
     uint8_t path[MAX_PATH_SIZE] = {0};
 
-    if( NULL == args || 0 == args_lenght)
+    if( NULL == args || 0 == args_length)
     {
         // TODO: check the ranges
         strncpy( path, shell_pwd, sizeof(shell_pwd) );
     }
     else
     {
-        args[args_lenght-1] = 0; // NUll-terminate, just in case
+        args[args_length-1] = 0; // NUll-terminate, just in case
 
         // TODO: check the ranges
-        strncpy( path, args, args_lenght);
+        strncpy( path, args, args_length);
     }
 #endif
 
