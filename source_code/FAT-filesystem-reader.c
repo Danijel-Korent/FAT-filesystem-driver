@@ -152,7 +152,7 @@ static inline uint32_t read_32(const unsigned char *buffer, int offset);
 static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
 
 // TODO: TEMP
-const unsigned char* const FS_image = FAT12_3_clusters_clean;
+const unsigned char* const FS_image = FAT12_7_clusters_clean;
 static void print_image_info(void);
 
 // Returns if the FAT table is 12, 16 or 32 bit
@@ -447,6 +447,10 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 static void execute_command_cd(uint8_t* const args, const uint32_t args_length);
 static void execute_command_ls(uint8_t* const args, const uint32_t args_length);
 
+void print_boot_sector_info(void);
+void print_FAT_table_info(void);
+void print_all_clusters_info(void);
+
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
 #define MAX_INPUT_LEN (100 + 1)
 
@@ -518,6 +522,18 @@ static void run_pseudo_shell(void)
             }
 
             execute_command_ls(args, args_len);
+        }
+        else if ('b' == user_input[0])
+        {
+            print_boot_sector_info();
+        }
+        else if ('f' == user_input[0])
+        {
+            print_FAT_table_info();
+        }
+        else if ('c' == user_input[0])
+        {
+            print_all_clusters_info();
         }
         else
         {
@@ -859,4 +875,19 @@ static void print_image_info(void)
         puts("\n\n --> Content of the file FILE_D11");
         puts(string_buffer);
     }
+}
+
+void print_boot_sector_info(void)
+{
+    printf("\n CALLED: print_boot_sector_info() ");
+}
+
+void print_FAT_table_info(void)
+{
+    printf("\n CALLED: print_FAT_table_info() ");
+}
+
+void print_all_clusters_info(void)
+{
+    printf("\n CALLED: print_all_clusters_info() ");
 }
