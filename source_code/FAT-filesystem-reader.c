@@ -450,6 +450,7 @@ static void execute_command_ls(uint8_t* const args, const uint32_t args_length);
 void print_boot_sector_info(void);
 void print_FAT_table_info(void);
 void print_all_clusters_info(void);
+void dump_data(void);
 
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
 #define MAX_INPUT_LEN (100 + 1)
@@ -507,7 +508,7 @@ static void run_pseudo_shell(void)
 
             execute_command_cd(args, args_len);
         }
-        else if ('l' == user_input[0] && 's' == user_input[1]) // ls
+        else if ('l' == user_input[0] && ('s' == user_input[1] || 'l' == user_input[1])) // ls or ll
         {
             uint8_t *args      = NULL;
             uint32_t args_len  = 0;
@@ -522,6 +523,10 @@ static void run_pseudo_shell(void)
             }
 
             execute_command_ls(args, args_len);
+        }
+        else if ('d' == user_input[0])
+        {
+            dump_data();
         }
         else if ('b' == user_input[0])
         {
@@ -540,7 +545,7 @@ static void run_pseudo_shell(void)
             printf("%s: Unknown command\n", user_input);
         }
 
-        printf("\nshell:%s $ ", shell_pwd);
+        printf("\n\nshell:%s $ ", shell_pwd);
     }
 }
 
@@ -891,4 +896,21 @@ void print_FAT_table_info(void)
 void print_all_clusters_info(void)
 {
     printf("\n CALLED: print_all_clusters_info() ");
+}
+
+void dump_data(void)
+{
+    printf("Placeholder for dump data \n");
+
+    // TODO:
+    //      - add into a loop and print at least 10 rows
+    //      - make it print 16 bytes per row, just like hex dump
+
+    const unsigned char* const p = FS_image; // Why 'p'? I don't know
+
+    int it = 0;
+    printf("\n  %04x: %x %x %x %x  |%c%c%c%c|", it, FS_image[it], FS_image[it+1], FS_image[it+2], FS_image[it+3], FS_image[it+0], FS_image[it+1], FS_image[it+2], FS_image[it+3]);
+
+    it += 4;
+    printf("\n  %04x: %x %x %x %x  |%c%c%c%c|", it, FS_image[it], FS_image[it+1], FS_image[it+2], FS_image[it+3], FS_image[it+0], FS_image[it+1], FS_image[it+2], FS_image[it+3]);
 }
