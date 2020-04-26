@@ -711,86 +711,7 @@ static inline uint8_t read__8(const unsigned char *buffer, int offset)
 // Temporary experimental function
 static void print_image_info(void)
 {
-    // Offsets of the Volume Boot Record (VBR)
-    // - BIOS Parametar block - Common data for FAT 12/16/32 (up to 0x23)
-    const uint_fast8_t dummy                    = 0x00;
-    const uint_fast8_t JUMP_INSTRUCTION_1       = 0x00;
-    const uint_fast8_t JUMP_INSTRUCTION_2       = 0x01;
-    const uint_fast8_t JUMP_INSTRUCTION_3       = 0x02;
-    const uint_fast8_t OEM_NAME_8_BYTE          = 0x03; // Not null-terminated
-    const uint_fast8_t BYTES_PER_SECTOR_16b     = 0x0b;
-    const uint_fast8_t SECTORS_PER_CLUSTER      = 0x0d;
-    const uint_fast8_t NUM_RESERVED_SECTORS_16b = 0x0e;
-    const uint_fast8_t NUM_OF_FATS              = 0x10;
-
-    const uint_fast8_t MAX_NUM_OF_ROOT_DIR_16b  = 0x11; // Only FAT12/16
-
-    const uint_fast8_t NUM_OF_TOTAL_SECTORS_16b = 0x13; // Used if partition is smaler than 32MB
-    const uint_fast8_t MEDIA_DESCRIPTOR         = 0x15;
-
-    const uint_fast8_t SECTORS_PER_FAT_TABLE_16b = 0x16; // Only FAT12/16
-    const uint_fast8_t SECTORS_PER_TRACK_16b     = 0x18;
-    const uint_fast8_t NUM_OF_HEADS_16b          = 0x1a;
-    const uint_fast8_t HIDDEN_SECTORS_32b        = 0x1c;
-    const uint_fast8_t NUM_OF_TOTAL_SECTORS_32b  = 0x20; // If NUM_OF_TOTAL_SECTORS_16b is zero, this one is used
-
-
-    // Print the BIOS Parametar block settings
-    char oem_string[8 + 1] = {0};
-    strncpy(oem_string, (const char*)(FS_image + OEM_NAME_8_BYTE), sizeof(oem_string)-1);
-
-    printf("\n JUMP_INSTRUCTION_1:   %#x", read__8(FS_image, JUMP_INSTRUCTION_1));
-    printf("\n JUMP_INSTRUCTION_2:   %#x", read__8(FS_image, JUMP_INSTRUCTION_2));
-    printf("\n OEM:                  %s",  oem_string);
-    printf("\n BYTES_PER_SECTOR:     %i",  read_16(FS_image, BYTES_PER_SECTOR_16b));
-    printf("\n SECTORS_PER_CLUSTER:  %i",  read__8(FS_image, SECTORS_PER_CLUSTER));
-    printf("\n NUM_RESERVED_SECTORS: %i",  read_16(FS_image, NUM_RESERVED_SECTORS_16b));
-    printf("\n NUM_OF_FATS:          %i",  read__8(FS_image, NUM_OF_FATS));
-
-
-    // TODO: CLEAN UP THIS MESS
-    // Offsets of the Volume Boot Record (VBR)
-    // - Extended BIOS Parametar block - FAT 12/16 ONLY !!!
-    //  8b Number of drives
-    //  8b Reserved
-    //  8b Extended boot signature, always 0x29
-    // 32b Volume ID
-    // 88b Volume label string (11 bytes)
-    // 80b File system type (8 bytes)
-    const uint_fast8_t FAT16_BOOT_SIGN_8b     = 0x26; // Extended boot signature, always 0x29
-    const uint_fast8_t FAT16_VOLUME_ID_32b    = 0x27;
-    const uint_fast8_t FAT16_VOLUME_LABEL_88b = 0x2B;
-    const uint_fast8_t FAT16_FS_TYPE_64b      = 0x36;
-
-    // Offsets of the Volume Boot Record (VBR)
-    // - Extended BIOS Parametar block - FAT 32 ONLY !!!
-    const uint_fast8_t FAT32_SECTORS_PER_FAT_32b      = 0x24; // also named "FAT Size"
-    const uint_fast8_t FAT32_EXTERNAL_FLAGS_16b       = 0x28; // ??? check if this is correct
-    const uint_fast8_t FAT32_FILE_SYSTE_VERSION_16b   = 0x2A; // ??? check if this is correct
-    const uint_fast8_t FAT32_ROOT_DIR_1ST_CLUSTER_32b = 0x2c;
-    // 16b File system info
-    // 16b Boot record backup
-    // 96b of reserved space
-    //  8b Number of drives
-    //  8b Reserved
-    //  8b Extended boot signature
-    // 32b Volume ID
-    // 88b Volume label string (11 bytes)
-    // 80b File system type (8 bytes)
-
-
-    // Print the extened BIOS Parametar block settings - for FAT12 variant
-    char label[11 + 1]  = {0};
-    strncpy(label, (const char*)(FS_image + FAT16_VOLUME_LABEL_88b), sizeof(label)-1);
-
-    char fs_type[8 + 1] = {0};
-    strncpy(fs_type, (const char*)(FS_image+ FAT16_FS_TYPE_64b), sizeof(fs_type)-1);
-
-    printf("\n FAT16_VOLUME_LABEL:   %s",label);
-    printf("\n FAT16_FS_TYPE:        %s",fs_type);
-
-    printf("\n Boot block signature: %#x %#x", FS_image[510], FS_image[511]);
-
+    print_boot_sector_info();
 
     // Offsets for directory entry structure
     const uint_fast8_t file_name_64b        = 0x00;
@@ -879,7 +800,87 @@ static void print_image_info(void)
 
 void print_boot_sector_info(void)
 {
-    printf("\n CALLED: print_boot_sector_info() ");
+    printf("\n----- BOOT SECTOR INFO -----");
+
+   // Offsets of the Volume Boot Record (VBR)
+    // - BIOS Parametar block - Common data for FAT 12/16/32 (up to 0x23)
+    const uint_fast8_t dummy                    = 0x00;
+    const uint_fast8_t JUMP_INSTRUCTION_1       = 0x00;
+    const uint_fast8_t JUMP_INSTRUCTION_2       = 0x01;
+    const uint_fast8_t JUMP_INSTRUCTION_3       = 0x02;
+    const uint_fast8_t OEM_NAME_8_BYTE          = 0x03; // Not null-terminated
+    const uint_fast8_t BYTES_PER_SECTOR_16b     = 0x0b;
+    const uint_fast8_t SECTORS_PER_CLUSTER      = 0x0d;
+    const uint_fast8_t NUM_RESERVED_SECTORS_16b = 0x0e;
+    const uint_fast8_t NUM_OF_FATS              = 0x10;
+
+    const uint_fast8_t MAX_NUM_OF_ROOT_DIR_16b  = 0x11; // Only FAT12/16
+
+    const uint_fast8_t NUM_OF_TOTAL_SECTORS_16b = 0x13; // Used if partition is smaler than 32MB
+    const uint_fast8_t MEDIA_DESCRIPTOR         = 0x15;
+
+    const uint_fast8_t SECTORS_PER_FAT_TABLE_16b = 0x16; // Only FAT12/16
+    const uint_fast8_t SECTORS_PER_TRACK_16b     = 0x18;
+    const uint_fast8_t NUM_OF_HEADS_16b          = 0x1a;
+    const uint_fast8_t HIDDEN_SECTORS_32b        = 0x1c;
+    const uint_fast8_t NUM_OF_TOTAL_SECTORS_32b  = 0x20; // If NUM_OF_TOTAL_SECTORS_16b is zero, this one is used
+
+
+    // Print the BIOS Parametar block settings
+    char oem_string[8 + 1] = {0};
+    strncpy(oem_string, (const char*)(FS_image + OEM_NAME_8_BYTE), sizeof(oem_string)-1);
+
+    printf("\n JUMP_INSTRUCTION_1:   %#x", read__8(FS_image, JUMP_INSTRUCTION_1));
+    printf("\n JUMP_INSTRUCTION_2:   %#x", read__8(FS_image, JUMP_INSTRUCTION_2));
+    printf("\n OEM:                  %s",  oem_string);
+    printf("\n BYTES_PER_SECTOR:     %i",  read_16(FS_image, BYTES_PER_SECTOR_16b));
+    printf("\n SECTORS_PER_CLUSTER:  %i",  read__8(FS_image, SECTORS_PER_CLUSTER));
+    printf("\n NUM_RESERVED_SECTORS: %i",  read_16(FS_image, NUM_RESERVED_SECTORS_16b));
+    printf("\n NUM_OF_FATS:          %i",  read__8(FS_image, NUM_OF_FATS));
+
+
+    // TODO: CLEAN UP THIS MESS
+    // Offsets of the Volume Boot Record (VBR)
+    // - Extended BIOS Parametar block - FAT 12/16 ONLY !!!
+    //  8b Number of drives
+    //  8b Reserved
+    //  8b Extended boot signature, always 0x29
+    // 32b Volume ID
+    // 88b Volume label string (11 bytes)
+    // 80b File system type (8 bytes)
+    const uint_fast8_t FAT16_BOOT_SIGN_8b     = 0x26; // Extended boot signature, always 0x29
+    const uint_fast8_t FAT16_VOLUME_ID_32b    = 0x27;
+    const uint_fast8_t FAT16_VOLUME_LABEL_88b = 0x2B;
+    const uint_fast8_t FAT16_FS_TYPE_64b      = 0x36;
+
+    // Offsets of the Volume Boot Record (VBR)
+    // - Extended BIOS Parametar block - FAT 32 ONLY !!!
+    const uint_fast8_t FAT32_SECTORS_PER_FAT_32b      = 0x24; // also named "FAT Size"
+    const uint_fast8_t FAT32_EXTERNAL_FLAGS_16b       = 0x28; // ??? check if this is correct
+    const uint_fast8_t FAT32_FILE_SYSTE_VERSION_16b   = 0x2A; // ??? check if this is correct
+    const uint_fast8_t FAT32_ROOT_DIR_1ST_CLUSTER_32b = 0x2c;
+    // 16b File system info
+    // 16b Boot record backup
+    // 96b of reserved space
+    //  8b Number of drives
+    //  8b Reserved
+    //  8b Extended boot signature
+    // 32b Volume ID
+    // 88b Volume label string (11 bytes)
+    // 80b File system type (8 bytes)
+
+
+    // Print the extened BIOS Parametar block settings - for FAT12 variant
+    char label[11 + 1]  = {0};
+    strncpy(label, (const char*)(FS_image + FAT16_VOLUME_LABEL_88b), sizeof(label)-1);
+
+    char fs_type[8 + 1] = {0};
+    strncpy(fs_type, (const char*)(FS_image+ FAT16_FS_TYPE_64b), sizeof(fs_type)-1);
+
+    printf("\n FAT16_VOLUME_LABEL:   %s",label);
+    printf("\n FAT16_FS_TYPE:        %s",fs_type);
+
+    printf("\n Boot block signature: %#x %#x \n", FS_image[510], FS_image[511]);
 }
 
 void print_FAT_table_info(void)
