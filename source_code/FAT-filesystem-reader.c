@@ -906,11 +906,31 @@ void dump_data(void)
     //      - add into a loop and print at least 10 rows
     //      - make it print 16 bytes per row, just like hex dump
 
-    const unsigned char* const p = FS_image; // Why 'p'? I don't know
+    //const unsigned char* const FS_image = FS_image; // Why 'p'? I don't know
 
     int it = 0;
-    printf("\n  %04x: %x %x %x %x  |%c%c%c%c|", it, FS_image[it], FS_image[it+1], FS_image[it+2], FS_image[it+3], FS_image[it+0], FS_image[it+1], FS_image[it+2], FS_image[it+3]);
 
-    it += 4;
-    printf("\n  %04x: %x %x %x %x  |%c%c%c%c|", it, FS_image[it], FS_image[it+1], FS_image[it+2], FS_image[it+3], FS_image[it+0], FS_image[it+1], FS_image[it+2], FS_image[it+3]);
+    for (int row = 0; row <= 20; row++)
+    {
+        printf("\n %04d: ", it);
+        printf("%02x %02x %02x %02x ", FS_image[it+0], FS_image[it+1], FS_image[it+2], FS_image[it+3]);
+        printf("%02x %02x %02x %02x ", FS_image[it+4], FS_image[it+5], FS_image[it+6], FS_image[it+7]);
+        printf(" ");
+        printf("%02x %02x %02x %02x ", FS_image[it+8], FS_image[it+9], FS_image[it+10], FS_image[it+11]);
+        printf("%02x %02x %02x %02x ", FS_image[it+12], FS_image[it+13], FS_image[it+14], FS_image[it+15]);
+        printf("  ");
+        printf("|");
+
+        for(int char_no = 0; char_no < 16; char_no++)
+        {
+            char character = FS_image[it+char_no];
+
+            // Replace control characters with a dot
+            if (character < 32) character = '.';
+
+            printf("%c", character); //TODO APPETIZER: find function for outputing single char
+        }
+        printf("|");
+        it += 16;
+    }
 }
