@@ -9,7 +9,7 @@
 
 // TODO NEXT:
 //      - TODO:    Add check for deleted entries
-//      - TODO:    Remove test stubs stuff (and remove print_image_info?)
+//      - TODO:    Remove test stubs stuff
 //      - BUG:     Finish implementation of the find_directory() -> Only iterating root and 1st level directories
 //      - FEATURE: Implement interface for reading files (at least first sector)
 //      - FEATURE: Implement cat command
@@ -82,8 +82,8 @@
     *       36 -  61  FAT 12/16 specific data of VBR
     *       62 - 510  Boot code (bootloader)   --> Sources conficting, but generated boot jump instruction for FAT12 jumps to 0x3e
     *
-    *       36 -  89  FAT 32 specific data of VBR   ???
-    *       90 - 510  Boot code (bootloader)        ???
+    *       36 -  89  FAT 32 specific data of VBR   --> is the range correct???
+    *       90 - 510  Boot code (bootloader)        --> is the range correct???
     *
     *   511 - 512 - Boot sector signature
     */
@@ -205,7 +205,7 @@ static const uint8_t* get_address_of_rootDirectory_table( void )
 
 static const uint32_t get_size_of_rootDirectory_table(void)
 {
-    // TODO: Add assert that the filesystem image is not FAT32, there is no Root Directory in FAT32
+    // TODO: Add assert to assert that the filesystem image is not FAT32, there is no Root Directory in FAT32
     // TODO: Root directory should occupy an entire sector, add a check for that
 
     const uint_fast8_t MAX_NUM_OF_ROOT_ENTRIES_16b  = 0x11; // Only FAT12/16
@@ -246,11 +246,12 @@ static const uint8_t* get_address_of_cluster( int cluster_no )
 int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const path)
 {
     handle->first_cluster_no = 0; // Zero means root dir entry
-    handle->seek = 0; // I don't event remember what's the purpose of this attribute, should have documented it
+    handle->seek = 0; // TODO: I don't event remember what's the purpose of this attribute, should have documented it
 
     // If the string is empty
     if( 0 == path[0] )
     {
+        printf("\n\nDEV ERROR: Empty directory name");
         return e_FILE_NOT_FOUND; // TODO: this must return error instead of file not found
     }
 
@@ -280,12 +281,17 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
 
         if( name_size > MAX_NAME_SIZE)
         {
+            printf("\n\nDEV ERROR: Long names not yet implemented");
             return e_FILE_NOT_FOUND; // TODO: again this must return error instead of file not found
         }
 
         // Currently the code only process first level directories (directories in root)
         // if there is more than one directory in path, just return from function
-        if( 0 != *(end_of_name+1) ) return e_FILE_NOT_FOUND;
+        if( 0 != *(end_of_name+1) )
+        {
+            printf("\n\nDEV ERROR: Only root level directories search implemented");
+            return e_FILE_NOT_FOUND;
+        }
 
 
         // Copy the name of the first directory in path into the input_directory_name
