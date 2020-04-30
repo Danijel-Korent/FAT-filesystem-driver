@@ -162,6 +162,8 @@ static const uint8_t get_FAT_type(void)
     return e_FAT12;
 }
 
+
+// TODO: for all getter, set the image through argument instead of hardcoding it in implementation
 static const uint32_t get_size_of_reserved_sectors(void)
 {
     // Header fields of the VBR sector (first sector of the FAT fs)
