@@ -455,10 +455,10 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 static void execute_command_cd(uint8_t* const args, const uint32_t args_length);
 static void execute_command_ls(uint8_t* const args, const uint32_t args_length);
 
-void print_boot_sector_info(void);
-void print_FAT_table_info(void);
-void print_all_clusters_info(void);
-void dump_data(void);
+void print_boot_sector_info(uint8_t* const args, const uint32_t args_length);
+void print_FAT_table_info(uint8_t* const args, const uint32_t args_length);
+void print_all_clusters_info(uint8_t* const args, const uint32_t args_length);
+void dump_data(uint8_t* const args, const uint32_t args_length);
 
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
 #define MAX_INPUT_LEN (100 + 1)
@@ -510,6 +510,8 @@ static void run_pseudo_shell(void)
             // TODO REFACTOR: duplicated code
             if( current_input_len > (3 + 1) )
             {
+                // TODO: fix this to serach for whitespace and send the rest of args
+                // TODO2: Make behavior the same as with argc/argv: split everyhing at whitespace and into seperate string.
                 args     = user_input + 3;
                 args_len = current_input_len - 3;
             }
@@ -532,21 +534,21 @@ static void run_pseudo_shell(void)
 
             execute_command_ls(args, args_len);
         }
-        else if ('d' == user_input[0])
+        else if ('d' == user_input[0]) // dump data
         {
-            dump_data();
+            dump_data(user_input, sizeof(user_input));
         }
-        else if ('b' == user_input[0])
+        else if ('b' == user_input[0]) // boot
         {
-            print_boot_sector_info();
+            print_boot_sector_info(user_input, sizeof(user_input));
         }
-        else if ('f' == user_input[0])
+        else if ('f' == user_input[0]) // fat
         {
-            print_FAT_table_info();
+            print_FAT_table_info(user_input, sizeof(user_input));
         }
-        else if ('c' == user_input[0])
+        else if ('c' == user_input[0]) // cluster
         {
-            print_all_clusters_info();
+            print_all_clusters_info(user_input, sizeof(user_input));
         }
         else
         {
@@ -724,7 +726,7 @@ static inline uint8_t read__8(const unsigned char *buffer, int offset)
 // Temporary experimental function
 static void print_image_info(void)
 {
-    print_boot_sector_info();
+    print_boot_sector_info(NULL, 0);
 
     // Offsets for directory entry structure
     const uint_fast8_t file_name_64b        = 0x00;
@@ -896,17 +898,17 @@ void print_boot_sector_info(void)
     printf("\n Boot block signature: %#x %#x \n", FS_image[510], FS_image[511]);
 }
 
-void print_FAT_table_info(void)
+void print_FAT_table_info(uint8_t* const args, const uint32_t args_length)
 {
     printf("\n CALLED: print_FAT_table_info() ");
 }
 
-void print_all_clusters_info(void)
+void print_all_clusters_info(uint8_t* const args, const uint32_t args_length)
 {
     printf("\n CALLED: print_all_clusters_info() ");
 }
 
-void dump_data(void)
+void dump_data(uint8_t* const args, const uint32_t args_length)
 {
     printf("\nFAT IMAGE DATA DUMP: \n");
 
