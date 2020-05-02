@@ -458,7 +458,7 @@ static void execute_command_ls(uint8_t* const args, const uint32_t args_length);
 void print_boot_sector_info(uint8_t* const args, const uint32_t args_length);
 void print_FAT_table_info(uint8_t* const args, const uint32_t args_length);
 void print_all_clusters_info(uint8_t* const args, const uint32_t args_length);
-void dump_data(uint8_t* const args, const uint32_t args_length);
+void execute__dump_data(int argc, char* argv[]);
 
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
 #define MAX_INPUT_LEN (100 + 1)
@@ -468,8 +468,6 @@ static uint8_t shell_pwd[MAX_PATH_SIZE]  = "/";
 
 static void run_pseudo_shell(void)
 {
-    // TODO: Implement a simple shell-like interface that supports cd, ls and cat commands
-
     uint8_t user_input[MAX_INPUT_LEN] = {0};
 
     printf("\n\n\nshell:%s $ ", shell_pwd);
@@ -536,7 +534,70 @@ static void run_pseudo_shell(void)
         }
         else if ('d' == user_input[0]) // dump data
         {
-            dump_data(user_input, sizeof(user_input));
+            //TODO APPETIZER: apply argc/argv argument processing to all commands
+
+
+            // Trim leading whitespace
+            // Do it by just moving pointer along the orignal input string
+            // util the first non whitespace symbol
+            char *trimmed_input = user_input;
+
+            for(; *trimmed_input == ' '; trimmed_input++);
+
+            // Trim trailing whitespace
+            // Do it by null-terminating from end of string until
+            // stumble upon non-whitespace char
+            size_t len = strlen(trimmed_input);
+
+            while(len > 0)
+            {
+                if(trimmed_input[len -1] != ' ') break;
+
+                // If it is whitespace, nullterminate it
+                trimmed_input[len -1] = 0;
+
+                len--;
+            }
+
+            // Finally, count the number of args, by counting whitespaces
+            // between words
+            int num_of_args = 0;
+
+            for(int i = 0; i < len; i++)
+            {
+                if( trimmed_input[i] == ' ' ) num_of_args++;
+            }
+
+
+            int argc = num_of_args +1; // +1 because cmd (first word) is also in the list
+
+            // Allocate argv array
+            const char** argv = malloc(argc * sizeof(const char*));
+
+            // Populate argv array
+            // TODO APPETIZER FIX: input "dump 1  2 3" is not being processed correctly
+            {
+                char *string_start = trimmed_input;
+                char *string_end = trimmed_input;
+
+                for(int i = 0; i < argc; i++)
+                {
+                    for(;(*string_end != ' ') && (*string_end != 0); string_end++);
+
+                    // Null-terminate after every word
+                    // because they will be used in-place
+                    *string_end = 0;
+
+                    argv[i] = string_start;
+
+                    string_end++;
+                    string_start = string_end;
+                }
+            }
+
+            execute__dump_data(argc, argv);
+
+            free(argv);
         }
         else if ('b' == user_input[0]) // boot
         {
@@ -908,9 +969,12 @@ void print_all_clusters_info(uint8_t* const args, const uint32_t args_length)
     printf("\n CALLED: print_all_clusters_info() ");
 }
 
-void dump_data(uint8_t* const args, const uint32_t args_length)
+void execute__dump_data(int argc, char* argv[])
 {
     printf("\nFAT IMAGE DATA DUMP: \n");
+
+    for( int i = 0; i < argc; i++ ) printf("\n argv[%i]: %s", i, argv[i]);
+    printf("\n");
 
     // TODO:
     //      - add support for 'address' argument as a number
