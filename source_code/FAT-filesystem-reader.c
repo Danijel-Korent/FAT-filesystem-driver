@@ -455,9 +455,9 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 static void execute_command_cd(uint8_t* const args, const uint32_t args_length);
 static void execute_command_ls(uint8_t* const args, const uint32_t args_length);
 
-void print_boot_sector_info(uint8_t* const args, const uint32_t args_length);
-void print_FAT_table_info(uint8_t* const args, const uint32_t args_length);
-void print_all_clusters_info(uint8_t* const args, const uint32_t args_length);
+void print_boot_sector_info(int argc, char* argv[]);
+void print_FAT_table_info(int argc, char* argv[]);
+void print_all_clusters_info(int argc, char* argv[]);
 void execute__dump_data(int argc, char* argv[]);
 
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
@@ -601,15 +601,15 @@ static void run_pseudo_shell(void)
         }
         else if ('b' == user_input[0]) // boot
         {
-            print_boot_sector_info(user_input, sizeof(user_input));
+            print_boot_sector_info(0, NULL);
         }
         else if ('f' == user_input[0]) // fat
         {
-            print_FAT_table_info(user_input, sizeof(user_input));
+            print_FAT_table_info(0, NULL);
         }
         else if ('c' == user_input[0]) // cluster
         {
-            print_all_clusters_info(user_input, sizeof(user_input));
+            print_all_clusters_info(0, NULL);
         }
         else
         {
@@ -787,7 +787,7 @@ static inline uint8_t read__8(const unsigned char *buffer, int offset)
 // Temporary experimental function
 static void print_image_info(void)
 {
-    print_boot_sector_info(NULL, 0);
+    print_boot_sector_info(0, NULL);
 
     // Offsets for directory entry structure
     const uint_fast8_t file_name_64b        = 0x00;
@@ -874,7 +874,7 @@ static void print_image_info(void)
     }
 }
 
-void print_boot_sector_info(void)
+void print_boot_sector_info(int argc, char* argv[])
 {
     printf("\n----- BOOT SECTOR INFO -----");
 
@@ -959,12 +959,12 @@ void print_boot_sector_info(void)
     printf("\n Boot block signature: %#x %#x \n", FS_image[510], FS_image[511]);
 }
 
-void print_FAT_table_info(uint8_t* const args, const uint32_t args_length)
+void print_FAT_table_info(int argc, char* argv[])
 {
     printf("\n CALLED: print_FAT_table_info() ");
 }
 
-void print_all_clusters_info(uint8_t* const args, const uint32_t args_length)
+void print_all_clusters_info(int argc, char* argv[])
 {
     printf("\n CALLED: print_all_clusters_info() ");
 }
