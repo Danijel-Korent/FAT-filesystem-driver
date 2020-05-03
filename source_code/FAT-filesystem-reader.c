@@ -1,4 +1,5 @@
 
+#include <stdlib.h>  //malloc/free
 #include <stdint.h>
 #include <stdio.h>   //printf, fgets
 #include <string.h>  //strcmp
@@ -572,7 +573,7 @@ static void run_pseudo_shell(void)
             int argc = num_of_args +1; // +1 because cmd (first word) is also in the list
 
             // Allocate argv array
-            const char** argv = malloc(argc * sizeof(const char*));
+            char** argv = malloc(argc * sizeof(const char*));
 
             // Populate argv array
             // TODO APPETIZER FIX: input "dump 1  2 3" is not being processed correctly
