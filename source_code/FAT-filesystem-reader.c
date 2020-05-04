@@ -453,12 +453,12 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 /***********************************************************************************************************************
  *                                            PSEUDO SHELL SECTION                                                     *
  ***********************************************************************************************************************/
-static void execute_command_cd(uint8_t* const args, const uint32_t args_length);
-static void execute_command_ls(uint8_t* const args, const uint32_t args_length);
+static void execute__command_cd(uint8_t* const args, const uint32_t args_length);
+static void execute__command_ls(uint8_t* const args, const uint32_t args_length);
 
-void print_boot_sector_info(int argc, char* argv[]);
-void print_FAT_table_info(int argc, char* argv[]);
-void print_all_clusters_info(int argc, char* argv[]);
+void execute__print_boot_sector_info(int argc, char* argv[]);
+void execute__print_FAT_table_info(int argc, char* argv[]);
+void execute__print_cluster_info(int argc, char* argv[]);
 void execute__dump_data(int argc, char* argv[]);
 
 #define MAX_PATH_SIZE (100 + 1) // 100 bytes should be enough for everybody!
@@ -515,7 +515,7 @@ static void run_pseudo_shell(void)
                 args_len = current_input_len - 3;
             }
 
-            execute_command_cd(args, args_len);
+            execute__command_cd(args, args_len);
         }
         else if ('l' == user_input[0] && ('s' == user_input[1] || 'l' == user_input[1])) // ls or ll
         {
@@ -531,7 +531,7 @@ static void run_pseudo_shell(void)
                 args_len = current_input_len - 3;
             }
 
-            execute_command_ls(args, args_len);
+            execute__command_ls(args, args_len);
         }
         else if ('d' == user_input[0]) // dump data
         {
@@ -602,15 +602,15 @@ static void run_pseudo_shell(void)
         }
         else if ('b' == user_input[0]) // boot
         {
-            print_boot_sector_info(0, NULL);
+            execute__print_boot_sector_info(0, NULL);
         }
         else if ('f' == user_input[0]) // fat
         {
-            print_FAT_table_info(0, NULL);
+            execute__print_FAT_table_info(0, NULL);
         }
         else if ('c' == user_input[0]) // cluster
         {
-            print_all_clusters_info(0, NULL);
+            execute__print_cluster_info(0, NULL);
         }
         else
         {
@@ -621,7 +621,7 @@ static void run_pseudo_shell(void)
     }
 }
 
-static void execute_command_cd(uint8_t* const args, const uint32_t args_length)
+static void execute__command_cd(uint8_t* const args, const uint32_t args_length)
 {
     // TODO: validate/sanitize input args, currently PWD is just updated without any checks
 
@@ -697,7 +697,7 @@ static void execute_command_cd(uint8_t* const args, const uint32_t args_length)
     }
 }
 
-static void execute_command_ls(uint8_t* const args, const uint32_t args_length)
+static void execute__command_ls(uint8_t* const args, const uint32_t args_length)
 {
 #if 1
 
@@ -788,7 +788,7 @@ static inline uint8_t read__8(const unsigned char *buffer, int offset)
 // Temporary experimental function
 static void print_image_info(void)
 {
-    print_boot_sector_info(0, NULL);
+    execute__print_boot_sector_info(0, NULL);
 
     // Offsets for directory entry structure
     const uint_fast8_t file_name_64b        = 0x00;
@@ -875,7 +875,7 @@ static void print_image_info(void)
     }
 }
 
-void print_boot_sector_info(int argc, char* argv[])
+void execute__print_boot_sector_info(int argc, char* argv[])
 {
     printf("\n----- BOOT SECTOR INFO -----");
 
@@ -960,12 +960,12 @@ void print_boot_sector_info(int argc, char* argv[])
     printf("\n Boot block signature: %#x %#x \n", FS_image[510], FS_image[511]);
 }
 
-void print_FAT_table_info(int argc, char* argv[])
+void execute__print_FAT_table_info(int argc, char* argv[])
 {
     printf("\n CALLED: print_FAT_table_info() ");
 }
 
-void print_all_clusters_info(int argc, char* argv[])
+void execute__print_cluster_info(int argc, char* argv[])
 {
     printf("\n CALLED: print_all_clusters_info() ");
 }
