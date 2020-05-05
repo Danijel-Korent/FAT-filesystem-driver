@@ -9,6 +9,12 @@
 #include "../fat_images/FAT12_7-clusters-clean.h"
 
 // TODO NEXT:
+//      - Move string trimming code to its own function
+//      - Move argc/argv preparation code to its own function
+//      - Apply argc/argv code to the rest of "info" commands
+
+
+// TODO:
 //      - TODO:    Add check for deleted entries
 //      - TODO:    Remove test stubs stuff
 //      - BUG:     Finish implementation of the find_directory() -> Only iterating root and 1st level directories
@@ -764,26 +770,10 @@ int main(void)
     return 0;
 }
 
+
 /***********************************************************************************************************************
- *                                           HELPER FUNCTIONS                                                          *
+ *                                            INFO FUNCTIONS                                                           *
  ***********************************************************************************************************************/
-
-static inline uint16_t read_16( const unsigned char *buffer, int offset)
-{
-    return (buffer[offset+1] << 8) + buffer[offset];
-}
-
-static inline uint32_t read_32(const unsigned char *buffer, int offset)
-{
-    return (buffer[offset + 3] << 24) + (buffer[offset + 2] << 16) + (buffer[offset + 1] << 8) + buffer[offset];
-}
-
-// This one is really here just for uniformity and nicer looking code
-static inline uint8_t read__8(const unsigned char *buffer, int offset)
-{
-    return buffer[offset];
-}
-
 
 // Temporary experimental function
 static void print_image_info(void)
@@ -1011,4 +1001,25 @@ void execute__dump_data(int argc, char* argv[])
         printf("|");
         base += 16;
     }
+}
+
+
+/***********************************************************************************************************************
+ *                                           HELPER FUNCTIONS                                                          *
+ ***********************************************************************************************************************/
+
+static inline uint16_t read_16( const unsigned char *buffer, int offset)
+{
+    return (buffer[offset+1] << 8) + buffer[offset];
+}
+
+static inline uint32_t read_32(const unsigned char *buffer, int offset)
+{
+    return (buffer[offset + 3] << 24) + (buffer[offset + 2] << 16) + (buffer[offset + 1] << 8) + buffer[offset];
+}
+
+// This one is really here just for uniformity and nicer looking code
+static inline uint8_t read__8(const unsigned char *buffer, int offset)
+{
+    return buffer[offset];
 }
