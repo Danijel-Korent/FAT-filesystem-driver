@@ -158,6 +158,8 @@ static inline uint16_t read_16(const unsigned char *buffer, int offset);
 static inline uint32_t read_32(const unsigned char *buffer, int offset);
 static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
 
+char* trim_string(char* input_string);
+
 // TODO: TEMP
 const unsigned char* const FS_image = FAT12_7_clusters_clean;
 static void print_image_info(void);
@@ -543,31 +545,11 @@ static void run_pseudo_shell(void)
         {
             //TODO APPETIZER: apply argc/argv argument processing to all commands
 
+            char* trimmed_input = trim_string(user_input);
 
-            // Trim leading whitespace
-            // Do it by just moving pointer along the orignal input string
-            // util the first non whitespace symbol
-            char *trimmed_input = user_input;
-
-            for(; *trimmed_input == ' '; trimmed_input++);
-
-            // Trim trailing whitespace
-            // Do it by null-terminating from end of string until
-            // stumble upon non-whitespace char
+            // Finally, count the number of args, by counting whitespaces between words
+            // TODO FIX: this does not work if there are multiple spaces
             size_t len = strlen(trimmed_input);
-
-            while(len > 0)
-            {
-                if(trimmed_input[len -1] != ' ') break;
-
-                // If it is whitespace, nullterminate it
-                trimmed_input[len -1] = 0;
-
-                len--;
-            }
-
-            // Finally, count the number of args, by counting whitespaces
-            // between words
             int num_of_args = 0;
 
             for(int i = 0; i < len; i++)
@@ -1022,4 +1004,31 @@ static inline uint32_t read_32(const unsigned char *buffer, int offset)
 static inline uint8_t read__8(const unsigned char *buffer, int offset)
 {
     return buffer[offset];
+}
+
+char* trim_string(char* input_string)
+{
+    char *trimmed_string = input_string;
+
+    // Trim leading whitespace
+    // Do it by just moving pointer along the orignal input string
+    // util the first non whitespace symbol
+    for(; *trimmed_string == ' '; trimmed_string++);
+
+    // Trim trailing whitespace
+    // Do it by null-terminating from end of string until
+    // stumble upon non-whitespace char
+    size_t len = strlen(trimmed_string);
+
+    while(len > 0)
+    {
+        if(trimmed_string[len -1] != ' ') break;
+
+        // If it is whitespace, nullterminate it
+        trimmed_string[len -1] = 0;
+
+        len--;
+    }
+
+    return trimmed_string;
 }
