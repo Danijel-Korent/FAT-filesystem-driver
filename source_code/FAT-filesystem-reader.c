@@ -9,7 +9,6 @@
 #include "../fat_images/FAT12_7-clusters-clean.h"
 
 // TODO NEXT:
-//      - Move string trimming code to its own function
 //      - Move argc/argv preparation code to its own function
 //      - Apply argc/argv code to the rest of "info" commands
 
@@ -95,6 +94,14 @@
     *   511 - 512 - Boot sector signature
     */
 
+// Helper functions to fetch the data (data is encoded in little-endian format)
+static inline uint16_t read_16(const unsigned char *buffer, int offset);
+static inline uint32_t read_32(const unsigned char *buffer, int offset);
+static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
+
+char* trim_string(char* input_string);
+char** parse_arguments(char* input_string, int* argc);
+
 
 // Okay, so we now know how to find data and how the data is encoded, time to implement interfaces
 typedef struct directory_handle_tag
@@ -152,13 +159,6 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 int8_t find_file( file_handle_t* const handle, const uint8_t* const path );
 int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint32_t buffer_size, uint32_t* const successfully_read);
 
-
-// Helper functions to fetch the data (data is encoded in little-endian format)
-static inline uint16_t read_16(const unsigned char *buffer, int offset);
-static inline uint32_t read_32(const unsigned char *buffer, int offset);
-static inline uint8_t  read__8(const unsigned char *buffer, int offset); // This one is really here just for uniformity and nicer looking code
-
-char* trim_string(char* input_string);
 
 // TODO: TEMP
 const unsigned char* const FS_image = FAT12_7_clusters_clean;
@@ -545,44 +545,10 @@ static void run_pseudo_shell(void)
         {
             //TODO APPETIZER: apply argc/argv argument processing to all commands
 
-            char* trimmed_input = trim_string(user_input);
+            int argc;
+            char** argv;
 
-            // Finally, count the number of args, by counting whitespaces between words
-            // TODO FIX: this does not work if there are multiple spaces
-            size_t len = strlen(trimmed_input);
-            int num_of_args = 0;
-
-            for(int i = 0; i < len; i++)
-            {
-                if( trimmed_input[i] == ' ' ) num_of_args++;
-            }
-
-
-            int argc = num_of_args +1; // +1 because cmd (first word) is also in the list
-
-            // Allocate argv array
-            char** argv = malloc(argc * sizeof(const char*));
-
-            // Populate argv array
-            // TODO APPETIZER FIX: input "dump 1  2 3" is not being processed correctly
-            {
-                char *string_start = trimmed_input;
-                char *string_end = trimmed_input;
-
-                for(int i = 0; i < argc; i++)
-                {
-                    for(;(*string_end != ' ') && (*string_end != 0); string_end++);
-
-                    // Null-terminate after every word
-                    // because they will be used in-place
-                    *string_end = 0;
-
-                    argv[i] = string_start;
-
-                    string_end++;
-                    string_start = string_end;
-                }
-            }
+            argv = parse_arguments(user_input, &argc);
 
             execute__dump_data(argc, argv);
 
@@ -1031,4 +997,48 @@ char* trim_string(char* input_string)
     }
 
     return trimmed_string;
+}
+
+char** parse_arguments(char* input_string, int* argc)
+{
+    char* trimmed_input = trim_string(input_string);
+
+    // Finally, count the number of args, by counting whitespaces between words
+    // TODO FIX: this does not work if there are multiple spaces
+    size_t len = strlen(trimmed_input);
+    int num_of_args = 0;
+
+    for(int i = 0; i < len; i++)
+    {
+        if( trimmed_input[i] == ' ' ) num_of_args++;
+    }
+
+
+    *argc = num_of_args +1; // +1 because cmd (first word) is also in the list
+
+    // Allocate argv array
+    char** argv = malloc(*argc * sizeof(const char*));
+
+    // Populate argv array
+    // TODO APPETIZER FIX: input "dump 1  2 3" is not being processed correctly
+    {
+        char *string_start = trimmed_input;
+        char *string_end = trimmed_input;
+
+        for(int i = 0; i < *argc; i++)
+        {
+            for(;(*string_end != ' ') && (*string_end != 0); string_end++);
+
+            // Null-terminate after every word
+            // because they will be used in-place
+            *string_end = 0;
+
+            argv[i] = string_start;
+
+            string_end++;
+            string_start = string_end;
+        }
+    }
+
+    return argv;
 }
