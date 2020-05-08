@@ -9,8 +9,7 @@
 #include "../fat_images/FAT12_7-clusters-clean.h"
 
 // TODO NEXT:
-//      - Move argc/argv preparation code to its own function
-//      - Apply argc/argv code to the rest of "info" commands
+//      - Modify 'cd' and 'ls' to use argc/argv argument format
 
 
 // TODO:
@@ -494,83 +493,83 @@ static void run_pseudo_shell(void)
             if( '\n' == user_input[length-1] ) user_input[length-1] = 0;
         }
 
-        // Process input
-        if (0 == strcmp(user_input, "exit"))
+        // TODO APPETIZER: Obviously, this can be seperate function
         {
-            break;
-        }
-        else if ('q' == user_input[0] && 0 == user_input[1])
-        {
-            break;
-        }
-        else if (0 == user_input[0])
-        {
-            // Empty input - do nothing
-        }
-        else if ('c' == user_input[0] && 'd' == user_input[1]) // cd
-        {
-            uint8_t *args      = NULL;
-            uint32_t args_len  = 0;
-
-            size_t current_input_len = strlen(user_input) + 1; // + null-terminator
-
-            // TODO REFACTOR: duplicated code
-            if( current_input_len > (3 + 1) )
-            {
-                // TODO: fix this to serach for whitespace and send the rest of args
-                // TODO2: Make behavior the same as with argc/argv: split everyhing at whitespace and into seperate string.
-                args     = user_input + 3;
-                args_len = current_input_len - 3;
-            }
-
-            execute__command_cd(args, args_len);
-        }
-        else if ('l' == user_input[0] && ('s' == user_input[1] || 'l' == user_input[1])) // ls or ll
-        {
-            uint8_t *args      = NULL;
-            uint32_t args_len  = 0;
-
-            // TODO REFACTOR: duplicated code
-            size_t current_input_len = strlen(user_input) + 1; // + null-terminator
-
-            if( current_input_len > (3 + 1) )
-            {
-                args     = user_input + 3;
-                args_len = current_input_len - 3;
-            }
-
-            execute__command_ls(args, args_len);
-        }
-        else if ('d' == user_input[0]) // dump data
-        {
-            //TODO APPETIZER: apply argc/argv argument processing to all commands
-
-            int argc;
-            char** argv;
+            int    argc = 0;
+            char** argv = NULL;
 
             argv = parse_arguments(user_input, &argc);
 
-            execute__dump_data(argc, argv);
+            // Process input
+            if (0 == strcmp(user_input, "exit"))
+            {
+                break;
+            }
+            else if ('q' == user_input[0] && 0 == user_input[1])
+            {
+                break;
+            }
+            else if (0 == user_input[0])
+            {
+                // Empty input - do nothing
+            }
+            else if ('c' == user_input[0] && 'd' == user_input[1]) // cd
+            {
+                uint8_t *args      = NULL;
+                uint32_t args_len  = 0;
+
+                size_t current_input_len = strlen(user_input) + 1; // + null-terminator
+
+                // TODO REFACTOR: duplicated code
+                if( current_input_len > (3 + 1) )
+                {
+                    // TODO: fix this to serach for whitespace and send the rest of args
+                    // TODO2: Make behavior the same as with argc/argv: split everyhing at whitespace and into seperate string.
+                    args     = user_input + 3;
+                    args_len = current_input_len - 3;
+                }
+
+                execute__command_cd(args, args_len);
+            }
+            else if ('l' == user_input[0] && ('s' == user_input[1] || 'l' == user_input[1])) // ls or ll
+            {
+                uint8_t *args      = NULL;
+                uint32_t args_len  = 0;
+
+                // TODO REFACTOR: duplicated code
+                size_t current_input_len = strlen(user_input) + 1; // + null-terminator
+
+                if( current_input_len > (3 + 1) )
+                {
+                    args     = user_input + 3;
+                    args_len = current_input_len - 3;
+                }
+
+                execute__command_ls(args, args_len);
+            }
+            else if ('d' == user_input[0]) // dump data
+            {
+                execute__dump_data(argc, argv);
+            }
+            else if ('b' == user_input[0]) // boot
+            {
+                execute__print_boot_sector_info(argc, argv);
+            }
+            else if ('f' == user_input[0]) // fat
+            {
+                execute__print_FAT_table_info(argc, argv);
+            }
+            else if ('c' == user_input[0]) // cluster
+            {
+                execute__print_cluster_info(argc, argv);
+            }
+            else
+            {
+                printf("%s: Unknown command\n", user_input);
+            }
 
             free(argv);
         }
-        else if ('b' == user_input[0]) // boot
-        {
-            execute__print_boot_sector_info(0, NULL);
-        }
-        else if ('f' == user_input[0]) // fat
-        {
-            execute__print_FAT_table_info(0, NULL);
-        }
-        else if ('c' == user_input[0]) // cluster
-        {
-            execute__print_cluster_info(0, NULL);
-        }
-        else
-        {
-            printf("%s: Unknown command\n", user_input);
-        }
-
         printf("\n\nshell:%s $ ", shell_pwd);
     }
 }
@@ -901,11 +900,17 @@ void execute__print_boot_sector_info(int argc, char* argv[])
 void execute__print_FAT_table_info(int argc, char* argv[])
 {
     printf("\n CALLED: print_FAT_table_info() ");
+
+    for( int i = 0; i < argc; i++ ) printf("\n argv[%i]: %s", i, argv[i]);
+    printf("\n");
 }
 
 void execute__print_cluster_info(int argc, char* argv[])
 {
     printf("\n CALLED: print_all_clusters_info() ");
+
+    for( int i = 0; i < argc; i++ ) printf("\n argv[%i]: %s", i, argv[i]);
+    printf("\n");
 }
 
 void execute__dump_data(int argc, char* argv[])
