@@ -1010,30 +1010,32 @@ char** parse_arguments(char* input_string, int* argc)
 {
     char* trimmed_input = trim_string(input_string);
 
-    // Finally, count the number of args, by counting whitespaces between words
-    // TODO FIX: this does not work if there are multiple spaces
+    // Count the number of args, by counting whitespaces between words,
+    // we need to know the length of the array before allocating it on heap
     size_t len = strlen(trimmed_input);
     int num_of_args = 0;
 
     for(int i = 0; i < len; i++)
     {
+        // Find whitespace
         if( trimmed_input[i] == ' ' ) num_of_args++;
-    }
 
+        // Skip all consecutive whitespaces
+        for(; trimmed_input[i] == ' '; i++);
+    }
 
     *argc = num_of_args +1; // +1 because cmd (first word) is also in the list
 
     // Allocate argv array
     char** argv = malloc(*argc * sizeof(const char*));
 
-    // Populate argv array
-    // TODO APPETIZER FIX: input "dump 1  2 3" is not being processed correctly
     {
         char *string_start = trimmed_input;
-        char *string_end = trimmed_input;
+        char *string_end =   trimmed_input;
 
         for(int i = 0; i < *argc; i++)
         {
+            // First whitespace symbol marks the end of argument
             for(;(*string_end != ' ') && (*string_end != 0); string_end++);
 
             // Null-terminate after every word
@@ -1042,7 +1044,10 @@ char** parse_arguments(char* input_string, int* argc)
 
             argv[i] = string_start;
 
+            // Skip null-terminator and all consecutive whitespaces
             string_end++;
+            for(; *string_end == ' '; string_end++);
+
             string_start = string_end;
         }
     }
