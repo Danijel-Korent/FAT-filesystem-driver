@@ -924,10 +924,6 @@ void execute__dump_data(int argc, char* argv[])
 
     // TODO:
     //      - add support for 'address' argument as a number
-    //      - add support for argument:
-    //          - boot      -> prints data from boot/VBR sector
-    //          - FAT       -> prints data of fat table
-    //          - cluster n -> prints data of cluster n
 
     const unsigned char* const data = FS_image;
 
