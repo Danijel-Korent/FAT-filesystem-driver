@@ -922,27 +922,31 @@ void execute__dump_data(int argc, char* argv[])
     for( int i = 0; i < argc; i++ ) printf("\n argv[%i]: %s", i, argv[i]);
     printf("\n");
 
-    // TODO:
-    //      - add support for 'address' argument as a number
-
     const unsigned char* const data = FS_image;
+    int offset = 0;
 
-    int base = 0;
+    if( argc > 1)
+    {
+        // // TODO APPETIZER: Add size/range check, must not be bigger than the image 
+        offset = strtol(argv[1], NULL, 0);
+    }
 
     for (int row = 0; row <= 20; row++)
     {
-        printf("\n %04d: ", base);
-        printf("%02x %02x %02x %02x ", data[base+0], data[base+1], data[base+2], data[base+3]);
-        printf("%02x %02x %02x %02x ", data[base+4], data[base+5], data[base+6], data[base+7]);
+        // Print hexadecimal values
+        printf("\n %04d: ", offset);
+        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // TODO APPETIZER: replace offset in index with just data+=offset??
+        printf("%02x %02x %02x %02x ", data[offset+4], data[offset+5], data[offset+6], data[offset+7]);
         printf(" ");
-        printf("%02x %02x %02x %02x ", data[base+8], data[base+9], data[base+10], data[base+11]);
-        printf("%02x %02x %02x %02x ", data[base+12], data[base+13], data[base+14], data[base+15]);
+        printf("%02x %02x %02x %02x ", data[offset+8], data[offset+9], data[offset+10], data[offset+11]);
+        printf("%02x %02x %02x %02x ", data[offset+12], data[offset+13], data[offset+14], data[offset+15]);
         printf("  ");
         printf("|");
 
+        // Print ASCII values
         for(int char_no = 0; char_no < 16; char_no++)
         {
-            char character = data[base+char_no];
+            char character = data[offset+char_no];
 
             // Replace control characters with a dot
             if (character < 32) character = '.';
@@ -950,7 +954,7 @@ void execute__dump_data(int argc, char* argv[])
             printf("%c", character); //TODO APPETIZER: find function for outputing single char
         }
         printf("|");
-        base += 16;
+        offset += 16;
     }
 }
 
