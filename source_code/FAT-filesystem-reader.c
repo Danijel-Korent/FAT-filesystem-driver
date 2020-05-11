@@ -13,8 +13,8 @@ unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
 //      - Modify 'cd' and 'ls' to use argc/argv argument format
-//      - 'dump' command: implement parsing first argument as address number, and hexdump data from that address
 //      - 'cluster' command: implement parsing first argument as cluster number, and hexdump that cluster
+//      - Add 'help' command
 
 
 // TODO:
