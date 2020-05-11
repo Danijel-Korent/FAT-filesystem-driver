@@ -8,6 +8,9 @@
 #include "../fat_images/FAT12_3-clusters-clean.h" // Here is located file system binary image (in a big byte array)
 #include "../fat_images/FAT12_7-clusters-clean.h"
 
+const unsigned char* const FS_image = FAT12_7_clusters_clean;
+unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
+
 // TODO NEXT:
 //      - Modify 'cd' and 'ls' to use argc/argv argument format
 //      - 'dump' command: implement parsing first argument as address number, and hexdump data from that address
@@ -162,7 +165,6 @@ int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint
 
 
 // TODO: TEMP
-const unsigned char* const FS_image = FAT12_7_clusters_clean;
 static void print_image_info(void);
 
 // Returns if the FAT table is 12, 16 or 32 bit
@@ -927,8 +929,16 @@ void execute__dump_data(int argc, char* argv[])
 
     if( argc > 1)
     {
-        // // TODO APPETIZER: Add size/range check, must not be bigger than the image 
+        // TODO APPETIZER: Replace hardcoded '20' with a variable
         offset = strtol(argv[1], NULL, 0);
+
+        if (offset > (FS_image_len - 20))
+        {
+            printf("ERROR: Address bigger that the filesystem image!!!");
+
+            // Don't want to actually allow user to be able to cause segfault
+            return;
+        }
     }
 
     for (int row = 0; row <= 20; row++)
