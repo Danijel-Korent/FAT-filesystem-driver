@@ -14,8 +14,10 @@ unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 // TODO NEXT:
 //      - Modify 'cd' and 'ls' to use argc/argv argument format
 //      - 'cluster' command: implement parsing first argument as cluster number, and hexdump that cluster
+//      - 'fat' command: implement hexdumping the FAT table
 //      - Add 'help' command
-
+//      - Define the output of the FAT table data for 'fat' cmd, and add sample into the ToDo list
+//      - Define the output of the cluster header data for 'cluster' cmd, and add sample into the ToDo list
 
 // TODO:
 //      - TODO:    Add check for deleted entries
@@ -915,6 +917,60 @@ void execute__print_cluster_info(int argc, char* argv[])
 
     for( int i = 0; i < argc; i++ ) printf("\n argv[%i]: %s", i, argv[i]);
     printf("\n");
+
+    const unsigned char* const data = FS_image;
+    int offset = 0;
+
+    if( argc > 1)
+    {
+        // TODO APPETIZER: Replace hardcoded '20' with a variable
+        int cluster_no = strtol(argv[1], NULL, 0);
+
+        if (cluster_no < 2)
+        {
+            printf("ERROR: Cluster numeration starts with 2!!");
+            return;
+        }
+
+        // TODO APPETIZER: Replace hardcoded 1024 with a function for calculating first cluster address
+        // TODO APPETIZER: Replace hardcoded 512 with a function for calculating cluster size
+        offset = 1024 + ((cluster_no -2) * 512);
+
+        if (offset > (FS_image_len - 20))
+        {
+            printf("ERROR: Address bigger that the filesystem image!!!");
+
+            // Don't want to actually allow user to be able to cause segfault
+            return;
+        }
+    }
+
+    // TODO APPETIZER: identical code in commands 'cluster' and 'dump', move into a common function
+    for (int row = 0; row <= 20; row++)
+    {
+        // Print hexadecimal values
+        printf("\n %04d: ", offset);
+        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // TODO APPETIZER: replace offset in index with just data+=offset??
+        printf("%02x %02x %02x %02x ", data[offset+4], data[offset+5], data[offset+6], data[offset+7]);
+        printf(" ");
+        printf("%02x %02x %02x %02x ", data[offset+8], data[offset+9], data[offset+10], data[offset+11]);
+        printf("%02x %02x %02x %02x ", data[offset+12], data[offset+13], data[offset+14], data[offset+15]);
+        printf("  ");
+        printf("|");
+
+        // Print ASCII values
+        for(int char_no = 0; char_no < 16; char_no++)
+        {
+            char character = data[offset+char_no];
+
+            // Replace control characters with a dot
+            if (character < 32) character = '.';
+
+            printf("%c", character); //TODO APPETIZER: find function for outputing single char
+        }
+        printf("|");
+        offset += 16; // TODO APPETIZER: Magic number
+    }
 }
 
 void execute__dump_data(int argc, char* argv[])
@@ -964,7 +1020,7 @@ void execute__dump_data(int argc, char* argv[])
             printf("%c", character); //TODO APPETIZER: find function for outputing single char
         }
         printf("|");
-        offset += 16;
+        offset += 16; // TODO APPETIZER: Magic number
     }
 }
 
