@@ -13,7 +13,6 @@ unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
 //      - Modify 'cd' and 'ls' to use argc/argv argument format
-//      - 'fat' command: implement hexdumping the FAT table
 //      - Add 'help' command
 //      - Define the output of the FAT table data for 'fat' cmd, and add sample into the ToDo list
 //      - Define the output of the cluster header data for 'cluster' cmd, and add sample into the ToDo list
@@ -465,7 +464,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 /***********************************************************************************************************************
  *                                            PSEUDO SHELL SECTION                                                     *
  ***********************************************************************************************************************/
-static void execute__command_cd(uint8_t* const args, const uint32_t args_length);
+static void execute__command_cd(int argc, char* argv[]);
 static void execute__command_ls(uint8_t* const args, const uint32_t args_length);
 
 void execute__print_boot_sector_info(int argc, char* argv[]);
@@ -520,21 +519,7 @@ static void run_pseudo_shell(void)
             }
             else if ('c' == user_input[0] && 'd' == user_input[1]) // cd
             {
-                uint8_t *args      = NULL;
-                uint32_t args_len  = 0;
-
-                size_t current_input_len = strlen(user_input) + 1; // + null-terminator
-
-                // TODO REFACTOR: duplicated code
-                if( current_input_len > (3 + 1) )
-                {
-                    // TODO: fix this to serach for whitespace and send the rest of args
-                    // TODO2: Make behavior the same as with argc/argv: split everyhing at whitespace and into seperate string.
-                    args     = user_input + 3;
-                    args_len = current_input_len - 3;
-                }
-
-                execute__command_cd(args, args_len);
+                execute__command_cd(argc, argv);
             }
             else if ('l' == user_input[0] && ('s' == user_input[1] || 'l' == user_input[1])) // ls or ll
             {
@@ -579,11 +564,11 @@ static void run_pseudo_shell(void)
     }
 }
 
-static void execute__command_cd(uint8_t* const args, const uint32_t args_length)
+static void execute__command_cd(int argc, char* argv[])
 {
     // TODO: validate/sanitize input args, currently PWD is just updated without any checks
 
-    if( NULL == args || 0 == args_length)
+    if( NULL == argv || argc < 2)
     {
         return; // Nothing to do here, maybe print no args..
     }
@@ -592,8 +577,8 @@ static void execute__command_cd(uint8_t* const args, const uint32_t args_length)
     uint8_t old_pwd[MAX_PATH_SIZE]  = "";
     strncpy(old_pwd, shell_pwd, MAX_PATH_SIZE);
 
-    // NUll-terminate, just in case
-    args[args_length-1] = 0;
+    uint8_t* const args = argv[1];
+    const uint32_t args_length = strlen(argv[1]);
 
     // Update the shell pwd to new path
     if( '/' == args[0] )
