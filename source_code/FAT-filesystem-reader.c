@@ -12,7 +12,7 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
-//      - Modify 'cd' and 'ls' to use argc/argv argument format
+//      - Modify 'ls' to use argc/argv argument format
 //      - Add 'help' command
 //      - Define the output of the FAT table data for 'fat' cmd, and add sample into the ToDo list
 //      - Define the output of the cluster header data for 'cluster' cmd, and add sample into the ToDo list
@@ -465,7 +465,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
  *                                            PSEUDO SHELL SECTION                                                     *
  ***********************************************************************************************************************/
 static void execute__command_cd(int argc, char* argv[]);
-static void execute__command_ls(uint8_t* const args, const uint32_t args_length);
+static void execute__command_ls(int argc, char* argv[]);
 
 void execute__print_boot_sector_info(int argc, char* argv[]);
 void execute__print_FAT_table_info(int argc, char* argv[]);
@@ -523,19 +523,7 @@ static void run_pseudo_shell(void)
             }
             else if ('l' == user_input[0] && ('s' == user_input[1] || 'l' == user_input[1])) // ls or ll
             {
-                uint8_t *args      = NULL;
-                uint32_t args_len  = 0;
-
-                // TODO REFACTOR: duplicated code
-                size_t current_input_len = strlen(user_input) + 1; // + null-terminator
-
-                if( current_input_len > (3 + 1) )
-                {
-                    args     = user_input + 3;
-                    args_len = current_input_len - 3;
-                }
-
-                execute__command_ls(args, args_len);
+                execute__command_ls(argc, argv);
             }
             else if ('d' == user_input[0]) // dump data
             {
@@ -640,13 +628,16 @@ static void execute__command_cd(int argc, char* argv[])
     }
 }
 
-static void execute__command_ls(uint8_t* const args, const uint32_t args_length)
+static void execute__command_ls(int argc, char* argv[])
 {
 #if 1
 
     // Just ignore arguments for now
 #if 0
     uint8_t path[MAX_PATH_SIZE] = {0};
+
+    uint8_t* const args = argv[1];
+    const uint32_t args_length = strlen(argv[1]);
 
     if( NULL == args || 0 == args_length)
     {
