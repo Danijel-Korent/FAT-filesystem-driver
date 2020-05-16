@@ -12,7 +12,6 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
-//      - Modify 'ls' to use argc/argv argument format
 //      - Add 'help' command
 //      - Define the output of the FAT table data for 'fat' cmd, and add sample into the ToDo list
 //      - Define the output of the cluster header data for 'cluster' cmd, and add sample into the ToDo list
@@ -466,6 +465,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
  ***********************************************************************************************************************/
 static void execute__command_cd(int argc, char* argv[]);
 static void execute__command_ls(int argc, char* argv[]);
+static void execute__command_help(int argc, char* argv[]);
 
 void execute__print_boot_sector_info(int argc, char* argv[]);
 void execute__print_FAT_table_info(int argc, char* argv[]);
@@ -541,6 +541,10 @@ static void run_pseudo_shell(void)
             {
                 execute__print_cluster_info(argc, argv);
             }
+            else if ('h' == user_input[0]) // help
+            {
+                execute__command_help(argc, argv);
+            }
             else
             {
                 printf("%s: Unknown command\n", user_input);
@@ -550,6 +554,11 @@ static void run_pseudo_shell(void)
         }
         printf("\n\nshell:%s $ ", shell_pwd);
     }
+}
+
+static void execute__command_help(int argc, char* argv[])
+{
+    printf("\nCalled HELP command!!");
 }
 
 static void execute__command_cd(int argc, char* argv[])
