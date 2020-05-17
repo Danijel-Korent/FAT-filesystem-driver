@@ -12,9 +12,9 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
-//      - Add 'help' command
 //      - Define the output of the FAT table data for 'fat' cmd, and add sample into the ToDo list
 //      - Define the output of the cluster header data for 'cluster' cmd, and add sample into the ToDo list
+//      - Define the next todo
 
 // TODO:
 //      - TODO:    Add check for deleted entries
@@ -558,7 +558,22 @@ static void run_pseudo_shell(void)
 
 static void execute__command_help(int argc, char* argv[])
 {
-    printf("\nCalled HELP command!!");
+    static const char* const help_content =
+
+        "\n Available shell commands:"
+        "\n\n"
+        "\n\t cd         - change directory"
+        "\n\t ls         - list directory"
+        "\n"
+        "\n\t boot       - print boot sector info"
+        "\n\t cluster n  - print the data content of the cluster 'n'"
+        "\n\t dump a     - print the data content starting from address 'a'"
+        "\n\t fat        - print the data content of the FAT table"
+        //"\n\t info       - filesystem info"
+        "\n\n";
+
+
+    printf(help_content);
 }
 
 static void execute__command_cd(int argc, char* argv[])
