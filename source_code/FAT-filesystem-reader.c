@@ -497,7 +497,7 @@ static void run_pseudo_shell(void)
             if( '\n' == user_input[length-1] ) user_input[length-1] = 0;
         }
 
-        // TODO APPETIZER: Obviously, this can be seperate function
+        // TODO APPETIZER: Obviously, this can be a seperate function
         {
             int    argc = 0;
             char** argv = NULL;
@@ -912,21 +912,19 @@ void execute__print_FAT_table_info(int argc, char* argv[])
     const unsigned char* const data = FS_image;
 
     // TODO APPETIZER: Hardcoded - use function that calculate this
-    int offset = 512;
-    int fat_size = 512;
+    int offset = 512;   // Start of FAT table
+    int fat_size = 512; // Size of whole FAT table
     int number_of_rows = fat_size / 16;
 
     if( argc > 1)
     {
         offset = strtol(argv[1], NULL, 0);
 
-        // TODO APPETIZER: Replace hardcoded '20' with a variable
-        // TODO APPETIZER: Actully, '20' is wrong number, it's rows instead of bytes
-        if (offset > (FS_image_len - 20))
+        if (offset > (FS_image_len - (number_of_rows*16)))
         {
             printf("ERROR: Address bigger that the filesystem image!!!");
 
-            // Don't want to actually allow user to be able to cause segfault
+            // Nobody likes segfaults
             return;
         }
     }
