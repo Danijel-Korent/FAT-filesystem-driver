@@ -12,9 +12,9 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
-//      - Define the output of the FAT table data for 'fat' cmd, and add sample into the ToDo list
-//      - Define the output of the cluster header data for 'cluster' cmd, and add sample into the ToDo list
-//      - Define the next todo
+//      - Using #if make a example output of the FAT table data for 'fat' cmd
+//      - Using #if make a example output of the cluster header data for 'cluster' cmd
+//      - Check TODO list and put something in the NEXT list
 
 // TODO:
 //      - TODO:    Add check for deleted entries
@@ -916,22 +916,20 @@ void execute__print_FAT_table_info(int argc, char* argv[])
     int fat_size = 512; // Size of whole FAT table
     int number_of_rows = fat_size / 16;
 
-    if( argc > 1)
+    // Just a sanity check
+    if (offset > (FS_image_len - (number_of_rows*16)))
     {
-        offset = strtol(argv[1], NULL, 0);
+        printf("ERROR: Address bigger that the filesystem image!!!");
 
-        if (offset > (FS_image_len - (number_of_rows*16)))
-        {
-            printf("ERROR: Address bigger that the filesystem image!!!");
-
-            // Nobody likes segfaults
-            return;
-        }
+        // Nobody likes segfaults
+        return;
     }
 
     // TODO APPETIZER: identical code in commands 'cluster' and 'dump', move into a common function
     for (int row = 0; row <= number_of_rows-1; row++)
     {
+        const int bytes_in_row = 16;
+
         // Print hexadecimal values
         printf("\n %04d: ", offset);
         printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // TODO APPETIZER: replace offset in index with just data+=offset??
@@ -953,7 +951,7 @@ void execute__print_FAT_table_info(int argc, char* argv[])
             printf("%c", character); //TODO APPETIZER: find function for outputing single char
         }
         printf("|");
-        offset += 16; // TODO APPETIZER: Magic number
+        offset += bytes_in_row; // TODO APPETIZER: Magic number
     }
 }
 
