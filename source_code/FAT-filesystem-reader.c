@@ -12,8 +12,10 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
-//      - Using #if make a example output of the FAT table data for 'fat' cmd
+//      - Use get_address_of_cluster() in execute__print_cluster_info (this also fixes wrong cluster no. printing)
 //      - Using #if make a example output of the cluster header data for 'cluster' cmd
+//      - Using #if make a example output of the FAT table data for 'fat' cmd
+//      - Move hex data dump code to a common function
 //      - Check TODO list and put something in the NEXT list
 
 // TODO:
@@ -957,7 +959,9 @@ void execute__print_FAT_table_info(int argc, char* argv[])
 
 void execute__print_cluster_info(int argc, char* argv[])
 {
-    printf("\n CALLED: print_all_clusters_info() ");
+    // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system#Directory_table
+
+    printf("\n CALLED: execute__print_cluster_info() ");
 
     for( int i = 0; i < argc; i++ ) printf("\n argv[%i]: %s", i, argv[i]);
     printf("\n");
@@ -976,8 +980,8 @@ void execute__print_cluster_info(int argc, char* argv[])
             return;
         }
 
-        // TODO APPETIZER: Replace hardcoded 1024 with a function for calculating first cluster address
-        // TODO APPETIZER: Replace hardcoded 512 with a function for calculating cluster size
+        // TODO APPETIZER: Replace this with a get_address_of_cluster() 
+        //      NOTE: the function returns mem. address, and this currently calculates only offset to an address
         offset = 1024 + ((cluster_no -2) * 512);
 
         if (offset > (FS_image_len - 20))
@@ -988,6 +992,45 @@ void execute__print_cluster_info(int argc, char* argv[])
             return;
         }
     }
+
+    // Experimental reading of directory content
+    // TODO: currently hardcoded, modify to calculate and iterate all directories
+    // Iterate the directory entries and print the parameters
+    {
+        const uint_fast8_t directory_slots_num = 16;
+
+        const uint8_t* const clusters_start_addr = offset; // In this image clusters start in 1 sector after "root directory" area
+
+        for( int i = 0; i < directory_slots_num; i++ )
+        {
+            const uint8_t* const directory_entry_base = data + offset //get_address_of_cluster(3) // Dir_1 is located in 2nd cluster (cluster no.3)
+                                                        + i*32; // 32 is the size of the directory entry structure
+
+            // First byte in file name have special meaning. If zero - slot is unused
+            if( 0 == *directory_entry_base )
+            {
+                break; // Rest of the slots are also empty according to the specs
+            }
+
+            // Offsets for directory entry structure
+            const uint_fast8_t file_name_64b        = 0x00;
+            const uint_fast8_t file_extension_24b   = 0x08;
+            const uint_fast8_t file_attributes_8b   = 0x0b;
+            const uint_fast8_t file_1st_cluster_16b = 0x1a;
+            const uint_fast8_t file_size_32b        = 0x1c;
+
+            char file_name[8+3 + 1]  = {0};
+            strncpy(file_name, (const char*)(directory_entry_base), sizeof(file_name)-1); // Get both the name and extension
+
+            printf("\n\n ENTRY NO.%i", i);
+            printf("\n   File name:   %s", file_name);
+            printf("\n   File attributes:   %#x", read__8(directory_entry_base, file_attributes_8b));
+            printf("\n   First cluster:     %#x", read_16(directory_entry_base, file_1st_cluster_16b));
+            printf("\n   File size:         %i",  read_32(directory_entry_base, file_size_32b));
+        }
+    }
+
+    printf("\n");
 
     // TODO APPETIZER: identical code in commands 'cluster' and 'dump', move into a common function
     for (int row = 0; row <= 20; row++)
