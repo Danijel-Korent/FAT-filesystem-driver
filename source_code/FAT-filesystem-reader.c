@@ -12,7 +12,7 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
-//      - Use get_address_of_cluster() in execute__print_cluster_info (this also fixes wrong cluster no. printing)
+//      - Use get_address_of_cluster() in execute__print_cluster_info for hex dump
 //      - Using #if make a example output of the cluster header data for 'cluster' cmd
 //      - Using #if make a example output of the FAT table data for 'fat' cmd
 //      - Move hex data dump code to a common function
@@ -969,10 +969,12 @@ void execute__print_cluster_info(int argc, char* argv[])
     const unsigned char* const data = FS_image;
     int offset = 0;
 
+    int cluster_no = 2;
+
     if( argc > 1)
     {
         // TODO APPETIZER: Replace hardcoded '20' with a variable
-        int cluster_no = strtol(argv[1], NULL, 0);
+        cluster_no = strtol(argv[1], NULL, 0);
 
         if (cluster_no < 2)
         {
@@ -982,7 +984,8 @@ void execute__print_cluster_info(int argc, char* argv[])
 
         // TODO APPETIZER: Replace this with a get_address_of_cluster() 
         //      NOTE: the function returns mem. address, and this currently calculates only offset to an address
-        offset = 1024 + ((cluster_no -2) * 512);
+        offset = 512 + 512 + 512 + ((cluster_no -2) * 512);
+        //       VBR + FAT + ROOT
 
         if (offset > (FS_image_len - 20))
         {
@@ -999,12 +1002,9 @@ void execute__print_cluster_info(int argc, char* argv[])
     {
         const uint_fast8_t directory_slots_num = 16;
 
-        const uint8_t* const clusters_start_addr = offset; // In this image clusters start in 1 sector after "root directory" area
-
         for( int i = 0; i < directory_slots_num; i++ )
         {
-            const uint8_t* const directory_entry_base = data + offset //get_address_of_cluster(3) // Dir_1 is located in 2nd cluster (cluster no.3)
-                                                        + i*32; // 32 is the size of the directory entry structure
+            const uint8_t* const directory_entry_base = get_address_of_cluster(cluster_no) + i*32; // 32 is the size of the directory entry structure
 
             // First byte in file name have special meaning. If zero - slot is unused
             if( 0 == *directory_entry_base )
