@@ -13,6 +13,7 @@ unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
 //      - Use get_address_of_cluster() in execute__print_cluster_info for hex dump
+//      - cmd 'cluster': "File attributes" should print names of all flags that are set
 //      - Using #if make a example output of the cluster header data for 'cluster' cmd
 //      - Using #if make a example output of the FAT table data for 'fat' cmd
 //      - Move hex data dump code to a common function
@@ -768,10 +769,7 @@ static void print_image_info(void)
         printf("\n   File size:         %i",  read_32(directory_entry_base, file_size_32b));
     }
 
-    // TODO NEXT:
-    //      - Print the content of the directories
-    //      - Print the content of the files
-
+#if 0
     // Experimental reading of directory content
     // TEMP HARDCODED: Print a content of a directory DIR_1 of current image
     // TODO: currently hardcoded, modify to calculate and iterate all directories
@@ -817,6 +815,7 @@ static void print_image_info(void)
         puts("\n\n --> Content of the file FILE_D11");
         puts(string_buffer);
     }
+#endif
 }
 
 void execute__print_boot_sector_info(int argc, char* argv[])
@@ -982,10 +981,7 @@ void execute__print_cluster_info(int argc, char* argv[])
             return;
         }
 
-        // TODO APPETIZER: Replace this with a get_address_of_cluster() 
-        //      NOTE: the function returns mem. address, and this currently calculates only offset to an address
-        offset = 512 + 512 + 512 + ((cluster_no -2) * 512);
-        //       VBR + FAT + ROOT
+        offset = get_address_of_cluster(cluster_no) - data;
 
         if (offset > (FS_image_len - 20))
         {
