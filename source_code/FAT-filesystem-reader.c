@@ -12,7 +12,8 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
-//      - Use get_address_of_cluster() in execute__print_cluster_info for hex dump
+//      - Add parameter checks (asserts) to all functions
+//      - Add logs inside program logic
 //      - cmd 'cluster': "File attributes" should print names of all flags that are set
 //      - Using #if make a example output of the cluster header data for 'cluster' cmd
 //      - Using #if make a example output of the FAT table data for 'fat' cmd
