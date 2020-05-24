@@ -12,6 +12,7 @@ const unsigned char* const FS_image = FAT12_7_clusters_clean;
 unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 
 // TODO NEXT:
+//      - Move duplicated 'hex dump' code from fat/cluster/dump commands into a single function
 //      - Add parameter checks (asserts) to all functions
 //      - Add logs inside program logic
 //      - cmd 'cluster': "File attributes" should print names of all flags that are set
@@ -919,6 +920,7 @@ void execute__print_FAT_table_info(int argc, char* argv[])
     int number_of_rows = fat_size / 16;
 
     // Just a sanity check
+    // TODO APPETIZER BUG: This is actually useless because it wrongly compares relative offset with an absolute address
     if (offset > (FS_image_len - (number_of_rows*16)))
     {
         printf("ERROR: Address bigger that the filesystem image!!!");
@@ -950,10 +952,10 @@ void execute__print_FAT_table_info(int argc, char* argv[])
             // Replace control characters with a dot
             if (character < 32) character = '.';
 
-            printf("%c", character); //TODO APPETIZER: find function for outputing single char
+            putchar(character);
         }
         printf("|");
-        offset += bytes_in_row; // TODO APPETIZER: Magic number
+        offset += bytes_in_row;
     }
 }
 
@@ -984,6 +986,7 @@ void execute__print_cluster_info(int argc, char* argv[])
 
         offset = get_address_of_cluster(cluster_no) - data;
 
+        // TODO APPETIZER BUG: This is actually useless because it wrongly compares relative offset with an absolute address
         if (offset > (FS_image_len - 20))
         {
             printf("ERROR: Address bigger that the filesystem image!!!");
@@ -1050,7 +1053,7 @@ void execute__print_cluster_info(int argc, char* argv[])
             // Replace control characters with a dot
             if (character < 32) character = '.';
 
-            printf("%c", character); //TODO APPETIZER: find function for outputing single char
+            putchar(character);
         }
         printf("|");
         offset += 16; // TODO APPETIZER: Magic number
@@ -1072,6 +1075,7 @@ void execute__dump_data(int argc, char* argv[])
         // TODO APPETIZER: Replace hardcoded '20' with a variable
         offset = strtol(argv[1], NULL, 0);
 
+        // TODO APPETIZER BUG: This is actually useless because it wrongly compares relative offset with an absolute address
         if (offset > (FS_image_len - 20))
         {
             printf("ERROR: Address bigger that the filesystem image!!!");
@@ -1101,7 +1105,7 @@ void execute__dump_data(int argc, char* argv[])
             // Replace control characters with a dot
             if (character < 32) character = '.';
 
-            printf("%c", character); //TODO APPETIZER: find function for outputing single char
+            putchar(character);
         }
         printf("|");
         offset += 16; // TODO APPETIZER: Magic number
