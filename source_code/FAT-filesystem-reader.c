@@ -102,6 +102,28 @@ unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
     *   511 - 512 - Boot sector signature
     */
 
+
+static void print_image_info(void);
+static void run_pseudo_shell(void);
+
+/***********************************************************************************************************************
+ *                                                      MAIN                                                           *
+ ***********************************************************************************************************************/
+
+int main(void)
+{
+    print_image_info();
+
+    run_pseudo_shell();
+
+    return 0;
+}
+
+
+/***********************************************************************************************************************
+ *                                 I need to organize this stuff in this section                                       *
+ ***********************************************************************************************************************/
+
 // Helper functions to fetch the data (data is encoded in little-endian format)
 static inline uint16_t read_16(const unsigned char *buffer, int offset);
 static inline uint32_t read_32(const unsigned char *buffer, int offset);
@@ -167,9 +189,6 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 int8_t find_file( file_handle_t* const handle, const uint8_t* const path );
 int8_t file_read( file_handle_t* const handle, uint8_t* const buffer, const uint32_t buffer_size, uint32_t* const successfully_read);
 
-
-// TODO: TEMP
-static void print_image_info(void);
 
 // Returns if the FAT table is 12, 16 or 32 bit
 static const uint8_t get_FAT_type(void)
@@ -716,15 +735,6 @@ static void execute__command_ls(int argc, char* argv[])
     printf(" %s %06i  %s \n", "f", 5, "FILE_6");
     printf(" %s %06i  %s \n", "f", 255, "FILE_7");
 #endif
-}
-
-int main(void)
-{
-    print_image_info();
-
-    run_pseudo_shell();
-
-    return 0;
 }
 
 
