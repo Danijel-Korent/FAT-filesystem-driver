@@ -593,7 +593,7 @@ static void execute__command_help(int argc, char* argv[])
         "\n\t cluster n  - print the data content of the cluster 'n'"
         "\n\t dump a     - print the data content starting from address 'a'"
         "\n\t fat        - print the data content of the FAT table"
-        //"\n\t info       - filesystem info"
+        //"\n\t info       - filesystem info/stats"
         "\n\n";
 
 
@@ -1143,6 +1143,15 @@ static inline uint8_t read__8(const unsigned char *buffer, int offset)
     return buffer[offset];
 }
 
+/**
+ * @brief Removes leading and trailing white-space
+ *
+ * @param input_string String to be trimmed
+ * @return char* String that is now trimmed
+ *
+ * @note The trimming is done 'in-place', meaning returned trimmed string is
+ *       in the same memory space in which the original string was
+ */
 char* trim_string(char* input_string)
 {
     char *trimmed_string = input_string;
@@ -1170,6 +1179,17 @@ char* trim_string(char* input_string)
     return trimmed_string;
 }
 
+
+/**
+ * @brief Parse raw input string and returns it in argv/argc format (array of strings/arguments)
+ *
+ * @param input_string The raw input string taken from command-line
+ * @param argc Number of arguments(strings) in the array "argv"
+ * @return char** Returns "argv", which is an array of string pointers
+ *
+ * @note The function just reuses and modifies input string, and all argv pointers
+ *       point to a memory space to which "input_string" is pointing
+ */
 char** parse_arguments(char* input_string, int* argc)
 {
     char* trimmed_input = trim_string(input_string);
