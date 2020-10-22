@@ -22,6 +22,7 @@ unsigned int FS_image_len = sizeof(FAT12_7_clusters_clean);
 //      - Check TODO list and put something in the NEXT list
 
 // TODO:
+//      - TODO:    Add CMAKE build support and split source into FAT-filesystem-driver.c, shell.c and main.c with main function
 //      - TODO:    Add check for deleted entries
 //      - TODO:    Remove test stubs stuff
 //      - BUG:     Finish implementation of the find_directory() -> Only iterating root and 1st level directories
@@ -521,7 +522,7 @@ static void run_pseudo_shell(void)
             if( '\n' == user_input[length-1] ) user_input[length-1] = 0;
         }
 
-        // TODO APPETIZER: Obviously, this can be a seperate function
+        // QTODO: Obviously, this can be a separate function
         {
             int    argc = 0;
             char** argv = NULL;
@@ -924,13 +925,13 @@ void execute__print_FAT_table_info(int argc, char* argv[])
 
     const unsigned char* const data = FS_image;
 
-    // TODO APPETIZER: Hardcoded - use function that calculate this
+    // QTODO: Hardcoded - use function that calculate this
     int offset = 512;   // Start of FAT table
     int fat_size = 512; // Size of whole FAT table
     int number_of_rows = fat_size / 16;
 
     // Just a sanity check
-    // TODO APPETIZER BUG: This is actually useless because it wrongly compares relative offset with an absolute address
+    // QTODO BUG: This is actually useless because it wrongly compares relative offset with an absolute address
     if (offset > (FS_image_len - (number_of_rows*16)))
     {
         printf("ERROR: Address bigger that the filesystem image!!!");
@@ -939,14 +940,14 @@ void execute__print_FAT_table_info(int argc, char* argv[])
         return;
     }
 
-    // TODO APPETIZER: identical code in commands 'cluster' and 'dump', move into a common function
+    // QTODO: identical code in commands 'cluster' and 'dump', move into a common function
     for (int row = 0; row <= number_of_rows-1; row++)
     {
         const int bytes_in_row = 16;
 
         // Print hexadecimal values
         printf("\n %04d: ", offset);
-        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // TODO APPETIZER: replace offset in index with just data+=offset??
+        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // QTODO: replace offset in index with just data+=offset??
         printf("%02x %02x %02x %02x ", data[offset+4], data[offset+5], data[offset+6], data[offset+7]);
         printf(" ");
         printf("%02x %02x %02x %02x ", data[offset+8], data[offset+9], data[offset+10], data[offset+11]);
@@ -985,7 +986,7 @@ void execute__print_cluster_info(int argc, char* argv[])
 
     if( argc > 1)
     {
-        // TODO APPETIZER: Replace hardcoded '20' with a variable
+        // QTODO: Replace hardcoded '20' with a variable
         cluster_no = strtol(argv[1], NULL, 0);
 
         if (cluster_no < 2)
@@ -996,7 +997,7 @@ void execute__print_cluster_info(int argc, char* argv[])
 
         offset = get_address_of_cluster(cluster_no) - data;
 
-        // TODO APPETIZER BUG: This is actually useless because it wrongly compares relative offset with an absolute address
+        // QTODO BUG: This is actually useless because it wrongly compares relative offset with an absolute address
         if (offset > (FS_image_len - 20))
         {
             printf("ERROR: Address bigger that the filesystem image!!!");
@@ -1042,12 +1043,12 @@ void execute__print_cluster_info(int argc, char* argv[])
 
     printf("\n");
 
-    // TODO APPETIZER: identical code in commands 'cluster' and 'dump', move into a common function
+    // QTODO: identical code in commands 'cluster' and 'dump', move into a common function
     for (int row = 0; row <= 20; row++)
     {
         // Print hexadecimal values
         printf("\n %04d: ", offset);
-        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // TODO APPETIZER: replace offset in index with just data+=offset??
+        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // QTODO: replace offset in index with just data+=offset??
         printf("%02x %02x %02x %02x ", data[offset+4], data[offset+5], data[offset+6], data[offset+7]);
         printf(" ");
         printf("%02x %02x %02x %02x ", data[offset+8], data[offset+9], data[offset+10], data[offset+11]);
@@ -1066,7 +1067,7 @@ void execute__print_cluster_info(int argc, char* argv[])
             putchar(character);
         }
         printf("|");
-        offset += 16; // TODO APPETIZER: Magic number
+        offset += 16; // QTODO: Magic number
     }
 }
 
@@ -1082,24 +1083,24 @@ void execute__dump_data(int argc, char* argv[])
 
     if( argc > 1)
     {
-        // TODO APPETIZER: Replace hardcoded '20' with a variable
+        // QTODO: Replace hardcoded '20' with a variable 1/2
         offset = strtol(argv[1], NULL, 0);
 
-        // TODO APPETIZER BUG: This is actually useless because it wrongly compares relative offset with an absolute address
+        // QTODO BUG: This is actually useless because it wrongly compares relative offset with an absolute address
         if (offset > (FS_image_len - 20))
         {
             printf("ERROR: Address bigger that the filesystem image!!!");
 
-            // Don't want to actually allow user to be able to cause segfault
+            // Don't want to allow user to cause a segfault
             return;
         }
     }
 
-    for (int row = 0; row <= 20; row++)
+    for (int row = 0; row <= 20; row++) // QTODO: Replace hardcoded '20' with a variable 2/2
     {
         // Print hexadecimal values
         printf("\n %04d: ", offset);
-        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // TODO APPETIZER: replace offset in index with just data+=offset??
+        printf("%02x %02x %02x %02x ", data[offset+0], data[offset+1], data[offset+2], data[offset+3]);  // QTODO: replace offset in index with just data+=offset??
         printf("%02x %02x %02x %02x ", data[offset+4], data[offset+5], data[offset+6], data[offset+7]);
         printf(" ");
         printf("%02x %02x %02x %02x ", data[offset+8], data[offset+9], data[offset+10], data[offset+11]);
@@ -1118,7 +1119,7 @@ void execute__dump_data(int argc, char* argv[])
             putchar(character);
         }
         printf("|");
-        offset += 16; // TODO APPETIZER: Magic number
+        offset += 16; // QTODO: Add name to magic number
     }
 }
 
