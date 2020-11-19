@@ -283,6 +283,11 @@ static const uint8_t* get_address_of_cluster( int cluster_no )
 // TODO: Add the size check for buffer containing path string
 int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const path)
 {
+    if (handle == NULL || path == NULL)
+    {
+        return e_FILE_NOT_FOUND; // TODO: should return internal error
+    }
+
     handle->first_cluster_no = 0; // Zero means root dir entry
     handle->seek = 0; // TODO: I don't event remember what's the purpose of this attribute, should have documented it
 
@@ -394,6 +399,11 @@ int8_t find_directory ( directory_handle_t* const handle, const uint8_t* const p
 
 int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_entry_t* const dir_entry )
 {
+    if (handle == NULL || dir_entry == NULL)
+    {
+        return e_FILE_NOT_FOUND; // TODO: should return internal error
+    }
+
     // Offsets for directory entry structure
     const uint_fast8_t file_name_64b        = 0x00;
     const uint_fast8_t file_extension_24b   = 0x08;
@@ -401,12 +411,14 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
     const uint_fast8_t file_1st_cluster_16b = 0x1a;
     const uint_fast8_t file_size_32b        = 0x1c;
 
+    const uint_fast8_t DIRECTORY_ENTRY_SIZE = 32;
+
     {
-        const uint8_t* directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
+        const uint8_t* directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*DIRECTORY_ENTRY_SIZE;
 
         if( 0 != handle->first_cluster_no )
         {
-            directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*32;
+            directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*DIRECTORY_ENTRY_SIZE;
         }
 
         // First byte in file name have special meaning. If zero - slot is unused
@@ -425,11 +437,11 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
             if( 0 != handle->first_cluster_no )
             {
-                directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*32;
+                directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*DIRECTORY_ENTRY_SIZE;
             }
             else
             {
-                directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
+                directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*DIRECTORY_ENTRY_SIZE;
             }
 
             file_attributes = read__8(directory_entry_base, file_attributes_8b);
@@ -442,11 +454,11 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
             if( 0 != handle->first_cluster_no )
             {
-                directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*32;
+                directory_entry_base = get_address_of_cluster(handle->first_cluster_no) + handle->seek*DIRECTORY_ENTRY_SIZE;
             }
             else
             {
-                directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*32; // 32 is the size of the directory entry structure
+                directory_entry_base = get_address_of_rootDirectory_table() + handle->seek*DIRECTORY_ENTRY_SIZE;
             }
         }
 
@@ -459,7 +471,7 @@ int8_t read_next_directory_entry ( directory_handle_t* const handle, directory_e
 
         file_attributes = read__8(directory_entry_base, file_attributes_8b);
 
-        if( 0x10 == file_attributes )
+        if( 0x10 == file_attributes ) // QTODO: magic number
         {
             dir_entry->type = e_DIRECTORY;
         }
@@ -1155,6 +1167,8 @@ static inline uint8_t read__8(const unsigned char *buffer, int offset)
  */
 char* trim_string(char* input_string)
 {
+    if (input_string == NULL) return NULL;
+
     char *trimmed_string = input_string;
 
     // Trim leading whitespace
@@ -1193,6 +1207,8 @@ char* trim_string(char* input_string)
  */
 char** parse_arguments(char* input_string, int* argc)
 {
+    if (input_string == NULL || argc == NULL) return NULL;
+
     char* trimmed_input = trim_string(input_string);
 
     // Count the number of args, by counting whitespaces between words,
